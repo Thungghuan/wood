@@ -1,4 +1,6 @@
-use wood::Bot;
+mod bot;
+
+use bot::Bot;
 
 fn main() {
     println!("Hello, BOT!");
