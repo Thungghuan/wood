@@ -1,3 +1,8 @@
+use wood::Bot;
+
 fn main() {
-    println!("Hello, world!");
+    println!("Hello, BOT!");
+
+    let bot = Bot::new(String::from("1160000000"));
+    bot.start();
 }
