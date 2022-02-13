@@ -1,1 +1,5 @@
 /target
+
+# Configure files
+config/*
+!config/config.example.yml
