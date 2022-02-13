@@ -1,18 +1,17 @@
-use tokio::fs::File;
-use tokio::io::{self, AsyncReadExt};
+use std::{fs::File, io::Read};
 use yaml_rust::{Yaml, YamlLoader};
 
-use crate::bot::BotConfig;
+use crate::bot::{BotConfig, BotSettings, BotSettingsAdapter, BotSettingsAdapterHttp};
 
-pub async fn load_yaml_file(path: &str) -> io::Result<Yaml> {
+pub fn load_yaml_file(path: &str) -> Result<Yaml, ()> {
     let mut file;
-    match File::open(path).await {
+    match File::open(path) {
         Ok(f) => file = f,
         Err(e) => panic!("{}", e),
     }
 
     let mut contents = String::new();
-    if let Err(e) = file.read_to_string(&mut contents).await {
+    if let Err(e) = file.read_to_string(&mut contents) {
         panic!("{}", e)
     }
 
@@ -20,12 +19,26 @@ pub async fn load_yaml_file(path: &str) -> io::Result<Yaml> {
     Ok(config)
 }
 
-pub async fn load_bot_config(path: &str) -> io::Result<BotConfig> {
-    let config = load_yaml_file(path).await?;
+pub fn load_bot_config(path: &str) -> Result<BotConfig, ()> {
+    let config = load_yaml_file(path)?;
 
     let qq = String::from(config["qq"].as_str().unwrap());
-    let master_qq = String::from(config["master_qq"].as_str().unwrap());
-    let setting_file = String::from(config["setting_file"].as_str().unwrap());
+    let master_qq = String::from(config["masterQQ"].as_str().unwrap());
+    let setting_file = String::from(config["settingFile"].as_str().unwrap());
 
     Ok(BotConfig::new(qq, master_qq, setting_file))
+}
+
+pub fn load_bot_settings(path: &str) -> Result<BotSettings, ()> {
+    let config = load_yaml_file(path)?;
+
+    let verify_key = config["verifyKey"].as_str().unwrap();
+    let host = config["adapterSettings"]["http"]["host"].as_str().unwrap();
+    let port = config["adapterSettings"]["http"]["port"].as_i64().unwrap();
+    let port = u32::try_from(port).unwrap();
+
+    let adapt_settings =
+        BotSettingsAdapter::new(BotSettingsAdapterHttp::new(String::from(host), port));
+
+    Ok(BotSettings::new(String::from(verify_key), adapt_settings))
 }
