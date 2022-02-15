@@ -10,7 +10,7 @@ async fn main() -> io::Result<()> {
     let config = utils::load_bot_config("config/config.yml").unwrap();
     let bot = Bot::new(config);
 
-    bot.start();
+    bot.start().await;
 
     Ok(())
 }

@@ -37,8 +37,16 @@ pub fn load_bot_settings(path: &str) -> Result<BotSettings, ()> {
     let port = config["adapterSettings"]["http"]["port"].as_i64().unwrap();
     let port = u32::try_from(port).unwrap();
 
-    let adapt_settings =
-        BotSettingsAdapter::new(BotSettingsAdapterHttp::new(String::from(host), port));
+    let adapter_settings = BotSettingsAdapter {
+        http: BotSettingsAdapterHttp {
+            host: String::from(host),
+            port,
+        },
+    };
 
-    Ok(BotSettings::new(String::from(verify_key), adapt_settings))
+    // Ok(BotSettings::new(String::from(verify_key), adapt_settings))
+    Ok(BotSettings {
+        verify_key: verify_key.to_string(),
+        adapter_settings,
+    })
 }
