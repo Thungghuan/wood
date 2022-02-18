@@ -1,7 +1,14 @@
-use std::{fs::File, io::Read};
+use serde::Deserialize;
+use std::{collections::HashMap, fs::File, io::Read};
 use yaml_rust::{Yaml, YamlLoader};
 
-use crate::bot::{BotConfig, BotSettings, BotSettingsAdapter, BotSettingsAdapterHttp};
+use crate::bot::BotConfig;
+
+pub struct BotSettings {
+    pub verify_key: String,
+    pub host: String,
+    pub port: String,
+}
 
 pub fn load_yaml_file(path: &str) -> Result<Yaml, ()> {
     let mut file;
@@ -29,24 +36,45 @@ pub fn load_bot_config(path: &str) -> Result<BotConfig, ()> {
     Ok(BotConfig::new(qq, master_qq, setting_file))
 }
 
-pub fn load_bot_settings(path: &str) -> Result<BotSettings, ()> {
-    let config = load_yaml_file(path)?;
+pub fn load_bot_settings(path: &str) -> BotSettings {
+    let config = load_yaml_file(path).unwrap();
 
-    let verify_key = config["verifyKey"].as_str().unwrap();
-    let host = config["adapterSettings"]["http"]["host"].as_str().unwrap();
-    let port = config["adapterSettings"]["http"]["port"].as_i64().unwrap();
-    let port = u32::try_from(port).unwrap();
+    let verify_key = config["verifyKey"].as_str().unwrap().to_string();
+    let host = config["adapterSettings"]["http"]["host"]
+        .as_str()
+        .unwrap()
+        .to_string();
+    let port = config["adapterSettings"]["http"]["port"]
+        .as_i64()
+        .unwrap()
+        .to_string();
 
-    let adapter_settings = BotSettingsAdapter {
-        http: BotSettingsAdapterHttp {
-            host: String::from(host),
-            port,
-        },
-    };
+    BotSettings {
+        verify_key,
+        host,
+        port,
+    }
+}
 
-    // Ok(BotSettings::new(String::from(verify_key), adapt_settings))
-    Ok(BotSettings {
-        verify_key: verify_key.to_string(),
-        adapter_settings,
-    })
+pub async fn get_session(base_url: &str, verify_key: &str) -> String {
+    #[derive(Deserialize, Debug)]
+    struct VerifyResponse {
+        session: String,
+    }
+
+    let client = reqwest::Client::new();
+    let mut data = HashMap::new();
+    data.insert("verifyKey", verify_key);
+
+    let resp = client
+        .post(String::from(base_url) + "/verify")
+        .json(&data)
+        .send()
+        .await
+        .unwrap()
+        .json::<VerifyResponse>()
+        .await
+        .unwrap();
+
+    resp.session
 }

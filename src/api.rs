@@ -1,24 +1,20 @@
-pub mod http;
+mod http;
 
-use crate::bot::BotSettings;
+use http::Http;
+use tokio::io;
 
-#[derive(Debug)]
 pub struct Api {
     qq: String,
-    host: String,
-    port: u32,
+    http: Http,
+    base_url: String,
 }
 
 impl Api {
-    pub fn new(qq: &str, bot_settings: BotSettings) -> Self {
-        let http_adapter = bot_settings.adapter_settings.http;
-        let host = &http_adapter.host;
-        let port = &http_adapter.port;
-
+    pub fn new(qq: &str, base_url: &str, session: &str) -> Self {
         Api {
             qq: qq.to_string(),
-            host: host.to_string(),
-            port: u32::try_from(*port).unwrap(),
+            http: Http::new(qq, base_url, session),
+            base_url: base_url.to_string(),
         }
     }
 }

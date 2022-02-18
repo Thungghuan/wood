@@ -1,13 +1,12 @@
 use std::fmt::Debug;
 
 use crate::api::Api;
-use crate::utils::load_bot_settings;
 
 #[derive(Debug)]
 pub struct BotConfig {
     qq: String,
     master_qq: String,
-    setting_file: String,
+    pub setting_file: String,
 }
 impl crate::bot::BotConfig {
     pub fn new(qq: String, master_qq: String, setting_file: String) -> Self {
@@ -54,23 +53,24 @@ impl BotSettings {
 
 pub struct Bot {
     qq: String,
-    config: BotConfig,
+    master_qq: String,
+    base_url: String,
+    session: String,
     api: Api,
 }
 impl Bot {
-    pub fn new(config: BotConfig) -> Self {
-        let settings = load_bot_settings(&config.setting_file).unwrap();
-
+    pub fn new(config: BotConfig, session: &str, base_url: &str) -> Self {
         Bot {
             qq: config.qq.clone(),
-            api: Api::new(&config.qq, settings),
-            config,
+            master_qq: config.master_qq.clone(),
+            session: session.to_string(),
+            base_url: base_url.to_string(),
+            api: Api::new(&config.qq, base_url, session),
         }
     }
 
-    pub fn start(&self) {
+    pub async fn start(&self) {
         println!("Bot qq is: {}", self.qq);
-        println!("Bot config is {:#?}", self.config);
-        println!("Bot api is {:#?}", self.api);
+        println!("Session key: {:#?}", self.session);
     }
 }
