@@ -49,4 +49,25 @@ impl Http {
             panic!("{}", resp.msg)
         }
     }
+
+    pub async fn release(&self, qq: &str) -> Result<(), reqwest::Error> {
+        let mut params = HashMap::new();
+        params.insert("sessionKey", self.session.clone());
+        params.insert("qq", qq.to_string());
+
+        let resp = self
+            .client
+            .post(self.url("/release"))
+            .json(&params)
+            .send()
+            .await?
+            .json::<BasicResponse>()
+            .await?;
+
+        if resp.code == 0 {
+            Ok(())
+        } else {
+            panic!("{}", resp.msg)
+        }
+    }
 }

@@ -24,6 +24,7 @@ pub struct Bot {
     session: String,
     api: Api,
 }
+
 impl Bot {
     pub fn new(config: BotConfig, session: &str, base_url: &str) -> Self {
         Bot {
@@ -40,5 +41,7 @@ impl Bot {
         println!("Bot qq is: {}", self.qq);
         println!("Master qq is: {}", self.master_qq);
         println!("Session key: {:#?}", self.session);
+
+        self.api.release().await;
     }
 }
