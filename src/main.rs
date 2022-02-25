@@ -14,8 +14,8 @@ async fn main() -> io::Result<()> {
     let session = utils::get_session(&base_url, &settings.verify_key).await;
 
     let bot = Bot::new(config, &session, &base_url);
-    
-    bot.start().await;
+
+    bot.start().await?;
 
     Ok(())
 }

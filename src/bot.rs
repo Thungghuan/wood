@@ -1,4 +1,6 @@
-use std::fmt::Debug;
+use std::{fmt::Debug, time::Duration};
+
+use tokio::time::sleep;
 
 use crate::api::Api;
 
@@ -35,13 +37,28 @@ impl Bot {
         }
     }
 
-    pub async fn start(&self) {
+    pub async fn start(&self) -> tokio::io::Result<()> {
         self.api.link().await;
 
         println!("Bot qq is: {}", self.qq);
         println!("Master qq is: {}", self.master_qq);
         println!("Session key: {:#?}", self.session);
 
+        tokio::select! {
+            _ = async {
+                loop {
+                    println!("The bot is running...");
+                    sleep(Duration::from_secs(1)).await;
+                }
+            } => {}
+            _ = tokio::signal::ctrl_c() => {
+                println!("\nCtrl+C received.\nReleasing session...");
+            }
+        }
+
         self.api.release().await;
+        println!("88");
+
+        Ok(())
     }
 }
