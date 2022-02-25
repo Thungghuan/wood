@@ -70,25 +70,4 @@ impl Http {
             panic!("{}", resp.msg)
         }
     }
-
-    // pub async fn sendFriendMessage(
-    //     &self,
-    //     target: String,
-    // ) -> Result<(), reqwest::Error> {
-    //     let mut params = HashMap::new();
-    //     params.insert("sessionKey", self.session.clone());
-    //     params.insert("target", target);
-    //     // params.insert("messageChain", message_chain);
-
-    //     let resp = self
-    //         .client
-    //         .post(self.url("/sendFriendMessage"))
-    //         .json(&params)
-    //         .send()
-    //         .await?
-    //         .json::<BasicResponse>()
-    //         .await?;
-
-    //     Ok(())
-    // }
 }

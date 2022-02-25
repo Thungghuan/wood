@@ -1,6 +1,6 @@
 use std::{fmt::Debug, time::Duration};
 
-use tokio::time::sleep;
+use tokio::{io, time::sleep};
 
 use crate::api::Api;
 
@@ -37,7 +37,7 @@ impl Bot {
         }
     }
 
-    pub async fn start(&self) -> tokio::io::Result<()> {
+    pub async fn start(&self) -> io::Result<()> {
         self.api.link().await;
 
         println!("Bot qq is: {}", self.qq);
