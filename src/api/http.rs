@@ -1,5 +1,4 @@
-use serde::Deserialize;
-use std::collections::HashMap;
+use serde::{Deserialize, Serialize};
 
 pub struct Http {
     session: String,
@@ -30,9 +29,17 @@ impl Http {
     }
 
     pub async fn link(&self, qq: &str) -> Result<(), reqwest::Error> {
-        let mut params = HashMap::new();
-        params.insert("sessionKey", self.session.clone());
-        params.insert("qq", qq.to_string());
+        #[derive(Serialize)]
+        #[serde(rename_all = "camelCase")]
+        struct Params {
+            session_key: String,
+            qq: String,
+        }
+
+        let params = Params {
+            session_key: self.session.clone(),
+            qq: qq.to_string(),
+        };
 
         let resp = self
             .client
@@ -51,9 +58,17 @@ impl Http {
     }
 
     pub async fn release(&self, qq: &str) -> Result<(), reqwest::Error> {
-        let mut params = HashMap::new();
-        params.insert("sessionKey", self.session.clone());
-        params.insert("qq", qq.to_string());
+        #[derive(Serialize)]
+        #[serde(rename_all = "camelCase")]
+        struct Params {
+            session_key: String,
+            qq: String,
+        }
+
+        let params = Params {
+            session_key: self.session.clone(),
+            qq: qq.to_string(),
+        };
 
         let resp = self
             .client
