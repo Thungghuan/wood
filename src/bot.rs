@@ -44,6 +44,27 @@ impl Bot {
         println!("Master qq is: {}", self.master_qq);
         println!("Session key: {:#?}", self.session);
 
+        use crate::message::{MessageChain, PlainMessage};
+
+        let mut message_chain: MessageChain = vec![];
+        message_chain.push(PlainMessage {
+            _type: "Plain".to_string(),
+            text: "Hello master, your bot start successfully!".to_string(),
+        });
+
+        // Send a start message to the master.
+        // TODO: If error occurred, the bot will not start.
+        match self
+            .api
+            .send_friend_message(&self.master_qq, message_chain)
+            .await
+        {
+            Ok(()) => {}
+            Err(e) => {
+                println!("{}", e);
+            }
+        }
+
         tokio::select! {
             _ = async {
                 loop {
@@ -55,7 +76,6 @@ impl Bot {
                 println!("\nCtrl+C received.\nReleasing session...");
             }
         }
-
         self.api.release().await;
         println!("88");
 

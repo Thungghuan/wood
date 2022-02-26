@@ -1,5 +1,6 @@
 mod api;
 mod bot;
+mod message;
 mod utils;
 
 use bot::Bot;

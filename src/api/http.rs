@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
 
+use crate::message::MessageChain;
+
 pub struct Http {
     session: String,
     client: reqwest::Client,
@@ -79,6 +81,42 @@ impl Http {
             .json::<BasicResponse>()
             .await?;
 
+        if resp.code == 0 {
+            Ok(())
+        } else {
+            panic!("{}", resp.msg)
+        }
+    }
+
+    pub async fn send_friend_message(
+        &self,
+        target: &str,
+        message_chain: MessageChain,
+    ) -> Result<(), reqwest::Error> {
+        #[derive(Serialize)]
+        #[serde(rename_all = "camelCase")]
+        struct Params {
+            session_key: String,
+            target: i32,
+            message_chain: MessageChain,
+        }
+
+        let params = Params {
+            session_key: self.session.clone(),
+            target: i32::from(target.to_string().parse::<i32>().unwrap()),
+            message_chain,
+        };
+
+        let resp = self
+            .client
+            .post(self.url("/sendFriendMessage"))
+            .json(&params)
+            .send()
+            .await?
+            .json::<BasicResponse>()
+            .await?;
+
+        // TODO: add error handler instead of using `panic!`
         if resp.code == 0 {
             Ok(())
         } else {

@@ -1,6 +1,7 @@
 mod http;
 
 use http::Http;
+use crate::message::MessageChain;
 
 pub struct Api {
     qq: String,
@@ -29,5 +30,14 @@ impl Api {
             Ok(()) => println!("Session {} successfully released.", self.session),
             Err(e) => panic!("{}", e),
         }
+    }
+
+    pub async fn send_friend_message(
+        &self,
+        target: &str,
+        message_chain: MessageChain,
+    ) -> Result<(), reqwest::Error> {
+        self.http.send_friend_message(target, message_chain).await?;
+        Ok(())
     }
 }
