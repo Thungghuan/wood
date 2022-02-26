@@ -97,13 +97,13 @@ impl Http {
         #[serde(rename_all = "camelCase")]
         struct Params {
             session_key: String,
-            target: i32,
+            target: String,
             message_chain: MessageChain,
         }
 
         let params = Params {
             session_key: self.session.clone(),
-            target: i32::from(target.to_string().parse::<i32>().unwrap()),
+            target: target.to_string(),
             message_chain,
         };
 
