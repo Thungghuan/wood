@@ -116,7 +116,6 @@ impl Http {
             .json::<BasicResponse>()
             .await?;
 
-        // TODO: add error handler instead of using `panic!`
         if resp.code == 0 {
             Ok(())
         } else {

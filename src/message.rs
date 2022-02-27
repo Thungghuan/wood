@@ -1,5 +1,6 @@
 use serde::Serialize;
 
+#[allow(dead_code)]
 #[derive(Serialize)]
 #[serde(tag = "type")]
 pub enum SingleMessage {

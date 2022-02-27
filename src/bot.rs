@@ -52,29 +52,33 @@ impl Bot {
         });
 
         // Send a start message to the master.
-        // TODO: If error occurred, the bot will not start.
-        match self
+        // If error occurred, the bot will not start.
+        let will_bot_start = match self
             .api
             .send_friend_message(&self.master_qq, message_chain)
             .await
         {
-            Ok(()) => {}
+            Ok(()) => true,
             Err(e) => {
-                println!("{}", e);
+                println!("Error: {}\nThe bot will stop.", e);
+                false
+            }
+        };
+
+        if will_bot_start {
+            tokio::select! {
+                _ = async {
+                    loop {
+                        println!("The bot is running...");
+                        sleep(Duration::from_secs(1)).await;
+                    }
+                } => {}
+                _ = tokio::signal::ctrl_c() => {
+                    println!("\nCtrl+C received.\nReleasing session...");
+                }
             }
         }
 
-        tokio::select! {
-            _ = async {
-                loop {
-                    println!("The bot is running...");
-                    sleep(Duration::from_secs(1)).await;
-                }
-            } => {}
-            _ = tokio::signal::ctrl_c() => {
-                println!("\nCtrl+C received.\nReleasing session...");
-            }
-        }
         self.api.release().await;
         println!("88");
 
