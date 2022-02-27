@@ -1,7 +1,8 @@
 mod http;
 
-use http::Http;
 use crate::message::MessageChain;
+use crate::Result;
+use http::Http;
 
 pub struct Api {
     qq: String,
@@ -36,7 +37,7 @@ impl Api {
         &self,
         target: &str,
         message_chain: MessageChain,
-    ) -> Result<(), reqwest::Error> {
+    ) -> Result<()> {
         self.http.send_friend_message(target, message_chain).await?;
         Ok(())
     }

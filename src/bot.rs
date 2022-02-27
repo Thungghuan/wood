@@ -59,7 +59,7 @@ impl Bot {
         {
             Ok(()) => true,
             Err(e) => {
-                println!("Error: {}\nThe bot will stop.", e);
+                println!("{}\nThe bot will stop.", e);
                 false
             }
         };

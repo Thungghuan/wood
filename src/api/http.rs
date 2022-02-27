@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
 
+use crate::error::Error;
 use crate::message::MessageChain;
+use crate::Result;
 
 pub struct Http {
     session: String,
@@ -30,7 +32,7 @@ impl Http {
         self.base_url.clone() + path
     }
 
-    pub async fn link(&self, qq: &str) -> Result<(), reqwest::Error> {
+    pub async fn link(&self, qq: &str) -> Result<()> {
         #[derive(Serialize)]
         #[serde(rename_all = "camelCase")]
         struct Params {
@@ -59,7 +61,7 @@ impl Http {
         }
     }
 
-    pub async fn release(&self, qq: &str) -> Result<(), reqwest::Error> {
+    pub async fn release(&self, qq: &str) -> Result<()> {
         #[derive(Serialize)]
         #[serde(rename_all = "camelCase")]
         struct Params {
@@ -92,7 +94,7 @@ impl Http {
         &self,
         target: &str,
         message_chain: MessageChain,
-    ) -> Result<(), reqwest::Error> {
+    ) -> Result<()> {
         #[derive(Serialize)]
         #[serde(rename_all = "camelCase")]
         struct Params {
@@ -119,7 +121,7 @@ impl Http {
         if resp.code == 0 {
             Ok(())
         } else {
-            panic!("{}", resp.msg)
+            Err(Error::new(resp.msg))
         }
     }
 }
