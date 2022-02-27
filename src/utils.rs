@@ -10,7 +10,7 @@ struct BotSettings {
     port: String,
 }
 
-fn load_yaml_file(path: &str) -> Result<Yaml, ()> {
+fn load_yaml_file(path: &str) -> Yaml {
     let mut file;
     match File::open(path) {
         Ok(f) => file = f,
@@ -22,22 +22,22 @@ fn load_yaml_file(path: &str) -> Result<Yaml, ()> {
         panic!("{}", e)
     }
 
-    let config = YamlLoader::load_from_str(&contents).unwrap()[0].clone();
-    Ok(config)
+    // When error occurred executing `unwrap()`, it will panic.
+    YamlLoader::load_from_str(&contents).unwrap()[0].clone()
 }
 
-fn load_bot_config(path: &str) -> Result<BotConfig, ()> {
-    let config = load_yaml_file(path)?;
+fn load_bot_config(path: &str) -> BotConfig {
+    let config = load_yaml_file(path);
 
     let qq = String::from(config["qq"].as_str().unwrap());
     let master_qq = String::from(config["masterQQ"].as_str().unwrap());
     let setting_file = String::from(config["settingFile"].as_str().unwrap());
 
-    Ok(BotConfig::new(qq, master_qq, setting_file))
+    BotConfig::new(qq, master_qq, setting_file)
 }
 
 fn load_bot_settings(path: &str) -> BotSettings {
-    let config = load_yaml_file(path).unwrap();
+    let config = load_yaml_file(path);
 
     let verify_key = config["verifyKey"].as_str().unwrap().to_string();
     let host = config["adapterSettings"]["http"]["host"]
@@ -88,7 +88,7 @@ async fn get_session(base_url: &str, verify_key: &str) -> String {
 }
 
 pub async fn init(path: &str) -> (BotConfig, String, String) {
-    let config = load_bot_config(path).unwrap();
+    let config = load_bot_config(path);
     let settings = load_bot_settings(&config.setting_file);
     let base_url = String::from("http://") + &settings.host + ":" + &settings.port;
     let session = get_session(&base_url, &settings.verify_key).await;
