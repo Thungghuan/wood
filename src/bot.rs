@@ -1,16 +1,15 @@
-use std::{fmt::Debug, time::Duration};
+use std::time::Duration;
 
 use tokio::{io, time::sleep};
 
 use crate::api::Api;
 
-#[derive(Debug)]
 pub struct BotConfig {
     qq: String,
     master_qq: String,
     pub setting_file: String,
 }
-impl crate::bot::BotConfig {
+impl BotConfig {
     pub fn new(qq: String, master_qq: String, setting_file: String) -> Self {
         BotConfig {
             qq,

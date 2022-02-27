@@ -1,16 +1,16 @@
-use serde::Deserialize;
-use std::{collections::HashMap, fs::File, io::Read};
+use serde::{Deserialize, Serialize};
+use std::{fs::File, io::Read};
 use yaml_rust::{Yaml, YamlLoader};
 
 use crate::bot::BotConfig;
 
-pub struct BotSettings {
-    pub verify_key: String,
-    pub host: String,
-    pub port: String,
+struct BotSettings {
+    verify_key: String,
+    host: String,
+    port: String,
 }
 
-pub fn load_yaml_file(path: &str) -> Result<Yaml, ()> {
+fn load_yaml_file(path: &str) -> Result<Yaml, ()> {
     let mut file;
     match File::open(path) {
         Ok(f) => file = f,
@@ -26,7 +26,7 @@ pub fn load_yaml_file(path: &str) -> Result<Yaml, ()> {
     Ok(config)
 }
 
-pub fn load_bot_config(path: &str) -> Result<BotConfig, ()> {
+fn load_bot_config(path: &str) -> Result<BotConfig, ()> {
     let config = load_yaml_file(path)?;
 
     let qq = String::from(config["qq"].as_str().unwrap());
@@ -36,7 +36,7 @@ pub fn load_bot_config(path: &str) -> Result<BotConfig, ()> {
     Ok(BotConfig::new(qq, master_qq, setting_file))
 }
 
-pub fn load_bot_settings(path: &str) -> BotSettings {
+fn load_bot_settings(path: &str) -> BotSettings {
     let config = load_yaml_file(path).unwrap();
 
     let verify_key = config["verifyKey"].as_str().unwrap().to_string();
@@ -56,19 +56,27 @@ pub fn load_bot_settings(path: &str) -> BotSettings {
     }
 }
 
-pub async fn get_session(base_url: &str, verify_key: &str) -> String {
+async fn get_session(base_url: &str, verify_key: &str) -> String {
     #[derive(Deserialize, Debug)]
     struct VerifyResponse {
         session: String,
     }
 
     let client = reqwest::Client::new();
-    let mut data = HashMap::new();
-    data.insert("verifyKey", verify_key);
+
+    #[derive(Serialize)]
+    #[serde(rename_all = "camelCase")]
+    struct Params {
+        verify_key: String,
+    }
+
+    let params = Params {
+        verify_key: verify_key.to_string(),
+    };
 
     let resp = client
         .post(String::from(base_url) + "/verify")
-        .json(&data)
+        .json(&params)
         .send()
         .await
         .unwrap()
@@ -77,4 +85,13 @@ pub async fn get_session(base_url: &str, verify_key: &str) -> String {
         .unwrap();
 
     resp.session
+}
+
+pub async fn init(path: &str) -> (BotConfig, String, String) {
+    let config = load_bot_config(path).unwrap();
+    let settings = load_bot_settings(&config.setting_file);
+    let base_url = String::from("http://") + &settings.host + ":" + &settings.port;
+    let session = get_session(&base_url, &settings.verify_key).await;
+
+    (config, session, base_url)
 }

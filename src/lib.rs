@@ -1,6 +1,8 @@
-pub mod api;
-pub mod bot;
-pub mod message;
+mod bot;
+pub use bot::Bot;
+
+mod api;
+mod message;
 
 mod utils;
 pub use utils::*;
