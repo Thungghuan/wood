@@ -44,11 +44,10 @@ impl Bot {
         println!("Master qq is: {}", self.master_qq);
         println!("Session key: {:#?}", self.session);
 
-        use crate::message::{MessageChain, PlainMessage};
+        use crate::message::{MessageChain, SingleMessage};
 
         let mut message_chain: MessageChain = vec![];
-        message_chain.push(PlainMessage {
-            _type: "Plain".to_string(),
+        message_chain.push(SingleMessage::Plain {
             text: "Hello master, your bot start successfully!".to_string(),
         });
 
