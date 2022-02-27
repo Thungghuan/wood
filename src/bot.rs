@@ -3,6 +3,8 @@ use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::api::Api;
+use crate::message::{MessageChain, SingleMessage};
+use crate::Result;
 
 pub struct BotConfig {
     qq: String,
@@ -36,27 +38,30 @@ impl Bot {
         }
     }
 
-    pub async fn start(&self) {
-        self.api.link().await;
-
+    pub async fn init(&self) -> Result<()> {
         println!("Bot qq is: {}", self.qq);
         println!("Master qq is: {}", self.master_qq);
         println!("Session key: {:#?}", self.session);
 
-        use crate::message::{MessageChain, SingleMessage};
-
+        // Send a start message to the master.
+        let start_message = "Hello master, your bot start successfully!";
         let mut message_chain: MessageChain = vec![];
         message_chain.push(SingleMessage::Plain {
-            text: "Hello master, your bot start successfully!".to_string(),
+            text: start_message.to_string(),
         });
 
-        // Send a start message to the master.
-        // If error occurred, the bot will not start.
-        let will_bot_start = match self
-            .api
+        self.api
             .send_friend_message(&self.master_qq, message_chain)
-            .await
-        {
+            .await?;
+
+        Ok(())
+    }
+
+    pub async fn start(&self) {
+        self.api.link().await;
+
+        // If error occurred, the bot will not start.
+        let will_bot_start = match self.init().await {
             Ok(()) => true,
             Err(e) => {
                 println!("{}\nThe bot will stop.", e);
