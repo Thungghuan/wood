@@ -83,10 +83,7 @@ impl Bot {
         if will_bot_start {
             tokio::select! {
                 _ = async {
-                    loop {
-                        println!("The bot is running...");
-                        sleep(Duration::from_secs(1)).await;
-                    }
+                    self.listen().await;
                 } => {}
                 _ = tokio::signal::ctrl_c() => {
                     println!("\nCtrl+C received.\nReleasing session...");
@@ -97,10 +94,7 @@ impl Bot {
         match self.api.release().await {
             Ok(_) => println!("88"),
             Err(e) => {
-                eprintln!(
-                    "[Error] Releasing bot session.\n{}",
-                    e
-                );
+                eprintln!("[Error] Releasing bot session.\n{}", e);
             }
         }
     }
@@ -110,6 +104,19 @@ impl Bot {
             Ok(())
         }
         self.start_with_callback(basic_start_callback).await;
+    }
+
+    pub async fn listen(&self) {
+        loop {
+            println!("The bot is running...");
+
+            match self.api.fetch_message().await {
+                Ok(resp) => println!("{}", resp),
+                Err(e) => println!("{}", e),
+            }
+
+            sleep(Duration::from_secs(1)).await;
+        }
     }
 
     pub async fn send_friend_message(

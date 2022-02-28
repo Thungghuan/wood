@@ -129,4 +129,31 @@ impl Api {
             Err(Error::new(resp.msg))
         }
     }
+
+    pub async fn fetch_message(&self) -> Result<String> {
+        #[derive(Serialize)]
+        #[serde(rename_all = "camelCase")]
+        struct Params {
+            session_key: String,
+            count: i8,
+        }
+
+        let query = Params {
+            session_key: self.session.clone(),
+            count: 10,
+        };
+
+        let resp = self
+            .client
+            // ATTENTION: use /peekMessage for developing
+            .get(self.url("/peekMessage"))
+            // .get(self.url("/fetchMessage"))
+            .query(&query)
+            .send()
+            .await?
+            .text()
+            .await?;
+
+        Ok(resp)
+    }
 }
