@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::error::Error;
-use crate::message::MessageChain;
+use crate::message::{MessageChain, ReceivedMessage};
 use crate::Result;
 
 #[derive(Deserialize, Debug)]
@@ -130,7 +130,7 @@ impl Api {
         }
     }
 
-    pub async fn fetch_message(&self) -> Result<String> {
+    pub async fn fetch_messages(&self) -> Result<Vec<ReceivedMessage>> {
         #[derive(Serialize)]
         #[serde(rename_all = "camelCase")]
         struct Params {
@@ -143,17 +143,26 @@ impl Api {
             count: 10,
         };
 
+        #[derive(Deserialize)]
+        struct FetchResponse {
+            code: i32,
+            msg: String,
+            data: Vec<ReceivedMessage>,
+        }
+
         let resp = self
             .client
-            // ATTENTION: use /peekMessage for developing
-            .get(self.url("/peekMessage"))
-            // .get(self.url("/fetchMessage"))
+            .get(self.url("/fetchMessage"))
             .query(&query)
             .send()
             .await?
-            .text()
+            .json::<FetchResponse>()
             .await?;
 
-        Ok(resp)
+        if resp.code == 0 {
+            Ok(resp.data)
+        } else {
+            Err(Error::new(resp.msg))
+        }
     }
 }

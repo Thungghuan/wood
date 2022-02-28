@@ -110,10 +110,17 @@ impl Bot {
         loop {
             println!("The bot is running...");
 
-            match self.api.fetch_message().await {
-                Ok(resp) => println!("{}", resp),
-                Err(e) => println!("{}", e),
-            }
+            let messages = match self.api.fetch_messages().await {
+                Ok(messages) => messages,
+                Err(e) => {
+                    println!("{}", e);
+                    vec![]
+                }
+            };
+
+            messages
+                .iter()
+                .for_each(|message| println!("{:#?}", message));
 
             sleep(Duration::from_secs(1)).await;
         }
