@@ -6,7 +6,7 @@ mod api;
 mod error;
 pub use error::Result;
 
-mod message;
+pub mod message;
 
 mod utils;
 pub use utils::*;

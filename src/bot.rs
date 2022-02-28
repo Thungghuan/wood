@@ -1,9 +1,9 @@
+use std::future::Future;
 use std::time::Duration;
-
 use tokio::time::sleep;
 
 use crate::api::Api;
-use crate::message::{MessageChain, SingleMessage};
+use crate::message::MessageChain;
 use crate::Result;
 
 pub struct BotConfig {
@@ -38,33 +38,33 @@ impl Bot {
         }
     }
 
-    pub async fn init(&self) -> Result<()> {
-        println!("Bot qq is: {}", self.qq);
-        println!("Master qq is: {}", self.master_qq);
-        println!("Session key: {:#?}", self.session);
-
-        // Send a start message to the master.
-        let start_message = "Hello master, your bot start successfully!";
-        let mut message_chain: MessageChain = vec![];
-        message_chain.push(SingleMessage::Plain {
-            text: start_message.to_string(),
-        });
-
-        self.api
-            .send_friend_message(&self.master_qq, message_chain)
-            .await?;
-
-        Ok(())
+    pub fn qq(&self) -> String {
+        self.qq.clone()
     }
 
-    pub async fn start(&self) {
+    pub fn master_qq(&self) -> String {
+        self.master_qq.clone()
+    }
+
+    pub fn session(&self) -> String {
+        self.session.clone()
+    }
+
+    pub async fn start_with_callback<'a, F, T>(&'a self, cb: F)
+    where
+        F: FnOnce(&'a Bot) -> T,
+        T: Future<Output = Result<()>>,
+    {
         self.api.link().await;
 
         // If error occurred, the bot will not start.
-        let will_bot_start = match self.init().await {
+        let will_bot_start = match cb(self).await {
             Ok(()) => true,
             Err(e) => {
-                println!("{}\nThe bot will stop.", e);
+                println!(
+                    "Error happened when executing bot start callback.\n{}\nThe bot won't start.",
+                    e
+                );
                 false
             }
         };
@@ -85,5 +85,21 @@ impl Bot {
 
         self.api.release().await;
         println!("88");
+    }
+
+    pub async fn start(&self) {
+        async fn basic_start_callback(_bot: &Bot) -> Result<()> {
+            Ok(())
+        }
+        self.start_with_callback(basic_start_callback).await;
+    }
+
+    pub async fn send_friend_message(
+        &self,
+        target: &String,
+        message_chain: MessageChain,
+    ) -> Result<()> {
+        self.api.send_friend_message(&target, message_chain).await?;
+        Ok(())
     }
 }
