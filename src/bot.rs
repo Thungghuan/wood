@@ -55,19 +55,30 @@ impl Bot {
         F: FnOnce(&'a Bot) -> T,
         T: Future<Output = Result<()>>,
     {
-        self.api.link().await;
-
         // If error occurred, the bot will not start.
-        let will_bot_start = match cb(self).await {
-            Ok(()) => true,
+        let mut will_bot_start = match self.api.link().await {
+            Ok(_) => true,
             Err(e) => {
                 println!(
-                    "Error happened when executing bot start callback.\n{}\nThe bot won't start.",
+                    "[Error] Linking session to qq.\n{}\nThe bot won't start.",
                     e
                 );
                 false
             }
         };
+
+        if will_bot_start {
+            will_bot_start = match cb(self).await {
+                Ok(_) => true,
+                Err(e) => {
+                    println!(
+                        "[Error] Executing bot start callback.\n{}\nThe bot won't start.",
+                        e
+                    );
+                    false
+                }
+            };
+        }
 
         if will_bot_start {
             tokio::select! {
@@ -83,8 +94,15 @@ impl Bot {
             }
         }
 
-        self.api.release().await;
-        println!("88");
+        match self.api.release().await {
+            Ok(_) => println!("88"),
+            Err(e) => {
+                eprintln!(
+                    "[Error] Releasing bot session.\n{}",
+                    e
+                );
+            }
+        }
     }
 
     pub async fn start(&self) {

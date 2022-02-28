@@ -4,27 +4,29 @@ use crate::error::Error;
 use crate::message::MessageChain;
 use crate::Result;
 
-pub struct Http {
-    session: String,
-    client: reqwest::Client,
-    base_url: String,
-}
-
 #[derive(Deserialize, Debug)]
 struct BasicResponse {
     code: i32,
     msg: String,
 }
 
-impl Http {
-    pub fn new(base_url: &str, session: &str) -> Self {
+pub struct Api {
+    qq: String,
+    session: String,
+    client: reqwest::Client,
+    base_url: String,
+}
+
+impl Api {
+    pub fn new(qq: &str, base_url: &str, session: &str) -> Self {
         let builder = reqwest::Client::builder();
         let client = builder.no_proxy().build().unwrap();
 
-        Http {
-            base_url: base_url.to_string(),
+        Api {
+            qq: qq.to_string(),
+            session: session.clone().to_string(),
             client,
-            session: session.to_string(),
+            base_url: base_url.to_string(),
         }
     }
 
@@ -32,7 +34,7 @@ impl Http {
         self.base_url.clone() + path
     }
 
-    pub async fn link(&self, qq: &str) -> Result<()> {
+    pub async fn link(&self) -> Result<()> {
         #[derive(Serialize)]
         #[serde(rename_all = "camelCase")]
         struct Params {
@@ -42,7 +44,7 @@ impl Http {
 
         let params = Params {
             session_key: self.session.clone(),
-            qq: qq.to_string(),
+            qq: self.qq.clone(),
         };
 
         let resp = self
@@ -55,13 +57,14 @@ impl Http {
             .await?;
 
         if resp.code == 0 {
+            println!("Bot successfully linked to qq: {}.", self.qq);
             Ok(())
         } else {
-            panic!("{}", resp.msg)
+            Err(Error::new(resp.msg))
         }
     }
 
-    pub async fn release(&self, qq: &str) -> Result<()> {
+    pub async fn release(&self) -> Result<()> {
         #[derive(Serialize)]
         #[serde(rename_all = "camelCase")]
         struct Params {
@@ -71,22 +74,24 @@ impl Http {
 
         let params = Params {
             session_key: self.session.clone(),
-            qq: qq.to_string(),
+            qq: self.qq.clone(),
         };
 
         let resp = self
             .client
-            .post(self.url("/release"))
+            .post(self.url("/bind"))
             .json(&params)
             .send()
-            .await?
+            .await
+            .unwrap()
             .json::<BasicResponse>()
-            .await?;
+            .await
+            .unwrap();
 
         if resp.code == 0 {
             Ok(())
         } else {
-            panic!("{}", resp.msg)
+            Err(Error::new(resp.msg))
         }
     }
 
