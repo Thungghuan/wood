@@ -19,6 +19,9 @@ pub enum Permission {
     MEMBER,
 }
 
+// TODO: refactor `Sender` trait to an individual submodule of message module.
+pub trait Sender {}
+
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct Group {
     pub id: i32,
@@ -41,6 +44,10 @@ pub struct GroupSender {
     pub permission: Permission,
     pub group: Group,
 }
+
+// TODO: implement the `Sender` trait.
+impl Sender for FriendSender {}
+impl Sender for GroupSender {}
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 #[serde(tag = "type")]

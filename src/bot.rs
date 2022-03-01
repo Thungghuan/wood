@@ -3,6 +3,7 @@ use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::api::Api;
+use crate::context::Context;
 use crate::message::{MessageChain, ReceivedMessage};
 use crate::Result;
 
@@ -119,7 +120,7 @@ impl Bot {
             };
 
             for message in messages {
-                self.handler(&message).await;
+                self.handler(message).await;
             }
 
             // fetch messages for every second.
@@ -127,7 +128,7 @@ impl Bot {
         }
     }
 
-    async fn handler(&self, message: &ReceivedMessage) {
+    async fn handler(&self, message: ReceivedMessage) {
         match message {
             ReceivedMessage::FriendMessage {
                 sender,
@@ -138,6 +139,8 @@ impl Bot {
                     sender.nickname, sender.id
                 );
                 println!("{:#?}", message_chain);
+
+                Context::new(sender, message_chain);
             }
             ReceivedMessage::GroupMessage {
                 sender,
