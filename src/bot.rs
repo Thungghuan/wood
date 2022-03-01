@@ -3,7 +3,7 @@ use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::api::Api;
-use crate::message::MessageChain;
+use crate::message::{MessageChain, ReceivedMessage};
 use crate::Result;
 
 pub struct BotConfig {
@@ -106,23 +106,49 @@ impl Bot {
         self.start_with_callback(basic_start_callback).await;
     }
 
-    pub async fn listen(&self) {
-        loop {
-            println!("The bot is running...");
+    async fn listen(&self) {
+        println!("The bot is running...");
 
+        loop {
             let messages = match self.api.fetch_messages().await {
                 Ok(messages) => messages,
                 Err(e) => {
-                    println!("{}", e);
+                    eprintln!("[Error] Fetching message.\n{}", e);
                     vec![]
                 }
             };
 
-            messages
-                .iter()
-                .for_each(|message| println!("{:#?}", message));
+            for message in messages {
+                self.handler(&message).await;
+            }
 
+            // fetch messages for every second.
             sleep(Duration::from_secs(1)).await;
+        }
+    }
+
+    async fn handler(&self, message: &ReceivedMessage) {
+        match message {
+            ReceivedMessage::FriendMessage {
+                sender,
+                message_chain,
+            } => {
+                println!(
+                    "Received friend message from {}({})",
+                    sender.nickname, sender.id
+                );
+                println!("{:#?}", message_chain);
+            }
+            ReceivedMessage::GroupMessage {
+                sender,
+                message_chain,
+            } => {
+                println!(
+                    "Received group message from {}[{}] in group[{}]",
+                    sender.member_name, sender.id, sender.group.name
+                );
+                println!("{:#?}", message_chain);
+            }
         }
     }
 
