@@ -21,25 +21,25 @@ pub enum Permission {
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct Group {
-    id: i32,
-    name: String,
-    permission: Permission,
+    pub id: i32,
+    pub name: String,
+    pub permission: Permission,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
-#[serde(untagged)]
-pub enum MessageSender {
-    Friend {
-        id: i32,
-        nickname: String,
-        remark: String,
-    },
-    GroupMember {
-        id: i32,
-        member_name: String,
-        permission: Permission,
-        group: Group,
-    },
+pub struct FriendSender {
+    pub id: i32,
+    pub nickname: String,
+    pub remark: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct GroupSender {
+    pub id: i32,
+    pub member_name: String,
+    pub permission: Permission,
+    pub group: Group,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
@@ -47,13 +47,13 @@ pub enum MessageSender {
 pub enum ReceivedMessage {
     #[serde(rename_all = "camelCase")]
     FriendMessage {
-        sender: MessageSender,
+        sender: FriendSender,
         message_chain: MessageChain,
     },
 
     #[serde(rename_all = "camelCase")]
     GroupMessage {
-        sender: MessageSender,
+        sender: GroupSender,
         message_chain: MessageChain,
     },
 }
@@ -100,7 +100,7 @@ fn check_message_chain_serialize_result() {
 }
 
 #[test]
-fn check_received_message_deserialize_result<'a>() {
+fn check_received_friend_message_deserialize_result() {
     let resp = r#"{
         "type":"FriendMessage",
         "messageChain":[{"type":"Source","id":7,"time":20211113},{"type":"Plain","text":"hi"}],
@@ -118,7 +118,7 @@ fn check_received_message_deserialize_result<'a>() {
     message_chain.push(source_message);
     message_chain.push(plain_message);
 
-    let sender = MessageSender::Friend {
+    let sender = FriendSender {
         id: 20211113,
         nickname: "Thungghuan".to_string(),
         remark: "Thungghuan".to_string(),
@@ -130,7 +130,55 @@ fn check_received_message_deserialize_result<'a>() {
     };
 
     assert_eq!(
-        serde_json::from_str::<'a, ReceivedMessage>(&resp).unwrap(),
+        serde_json::from_str::<ReceivedMessage>(&resp).unwrap(),
         received_message
+    );
+}
+
+#[test]
+fn check_group_sender_deserialize_result() {
+    let resp = r#"
+    {
+        "sender": {
+            "id":20211113,
+            "memberName":"Thungghuan",
+            "specialTitle":"",
+            "permission":"OWNER",
+            "joinTimestamp":20211113,
+            "lastSpeakTimestamp":20211113,
+            "muteTimeRemaining":0,
+            "group": {
+                "id":20211113,
+                "name":"木木",
+                "permission":"ADMINISTRATOR"
+            }
+        }
+    }"#;
+
+    #[derive(Serialize, Deserialize, Debug, PartialEq)]
+    struct GroupSenderStruct {
+        sender: GroupSender,
+    }
+
+    let group = Group {
+        id: 20211113,
+        name: "木木".to_string(),
+        permission: Permission::ADMINISTRATOR,
+    };
+
+    let group_sender = GroupSender {
+        id: 20211113,
+        member_name: "Thungghuan".to_string(),
+        permission: Permission::OWNER,
+        group,
+    };
+
+    let group_sender_struct = GroupSenderStruct {
+        sender: group_sender,
+    };
+
+    assert_eq!(
+        serde_json::from_str::<GroupSenderStruct>(&resp).unwrap(),
+        group_sender_struct
     );
 }
