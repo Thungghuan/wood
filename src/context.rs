@@ -1,6 +1,9 @@
 use crate::message::{ChatroomType, MessageChain, Sender};
+use crate::{Bot, Result};
 
-pub struct Context {
+pub struct Context<'ctx> {
+    bot: &'ctx Bot,
+
     chatroom_type: ChatroomType,
     chatroom_id: i32,
     chatroom_name: String,
@@ -9,14 +12,15 @@ pub struct Context {
     sender_nickname: String,
 }
 
-impl Context {
-    pub fn new<S>(sender: S, message_chain: MessageChain) -> Self
+impl<'ctx> Context<'ctx> {
+    pub fn new<S>(bot: &'ctx Bot, sender: S, message_chain: &MessageChain) -> Self
     where
         S: Sender,
     {
         println!("{:#?}", message_chain);
 
         Context {
+            bot,
             chatroom_type: sender.chatroom_type(),
             chatroom_id: sender.chatroom_id(),
             chatroom_name: sender.chatroom_name(),
@@ -43,5 +47,14 @@ impl Context {
 
     pub fn sender_nickname(&self) -> String {
         self.sender_nickname.clone()
+    }
+
+    // TODO: reply in a group
+    pub async fn reply(&self, message_chain: MessageChain) -> Result<()> {
+        self.bot
+            .send_friend_message(&self.sender_id.to_string(), message_chain)
+            .await?;
+
+        Ok(())
     }
 }

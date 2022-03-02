@@ -4,7 +4,7 @@ use tokio::time::sleep;
 
 use crate::api::Api;
 use crate::context::Context;
-use crate::message::{MessageChain, ReceivedMessage, Sender};
+use crate::message::{MessageChain, ReceivedMessage};
 use crate::Result;
 
 pub struct BotConfig {
@@ -120,7 +120,9 @@ impl Bot {
             };
 
             for message in messages {
-                self.handler(message).await;
+                if let Err(e) = self.handler(message).await {
+                    eprintln!("[Error] Handling message.\n{}", e);
+                }
             }
 
             // fetch messages for every second.
@@ -128,13 +130,15 @@ impl Bot {
         }
     }
 
-    async fn handler(&self, message: ReceivedMessage) {
+    async fn handler(&self, message: ReceivedMessage) -> Result<()> {
         match message {
             ReceivedMessage::FriendMessage {
                 sender,
                 message_chain,
             } => {
-                let ctx = Context::new(sender, message_chain);
+                let ctx = Context::new(self, sender, &message_chain);
+
+                ctx.reply(message_chain).await?;
 
                 println!(
                     "Received friend message from {}({})",
@@ -146,7 +150,7 @@ impl Bot {
                 sender,
                 message_chain,
             } => {
-                let ctx = Context::new(sender, message_chain);
+                let ctx = Context::new(self, sender, &message_chain);
 
                 println!(
                     "Received group message from {}[{}] in group[{}]",
@@ -156,6 +160,8 @@ impl Bot {
                 );
             }
         }
+
+        Ok(())
     }
 
     pub async fn send_friend_message(
