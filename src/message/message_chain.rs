@@ -3,9 +3,33 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 #[serde(tag = "type")]
 pub enum SingleMessage {
-    Source { id: i32, time: i32 },
-    At { target: String, display: String },
-    Plain { text: String },
+    Source {
+        id: i32,
+        time: i32,
+    },
+
+    At {
+        target: String,
+        display: String,
+    },
+
+    Plain {
+        text: String,
+    },
+
+    #[serde(rename_all = "camelCase")]
+    Face {
+        face_id: i32,
+        name: String,
+    },
+
+    #[serde(rename_all = "camelCase")]
+    Image {
+        image_id: Option<String>,
+        url: Option<String>,
+        path: Option<String>,
+        base64: Option<String>,
+    },
 }
 
 pub type MessageChain = Vec<SingleMessage>;
