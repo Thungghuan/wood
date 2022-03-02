@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::error::Error;
-use crate::message::{MessageChain, ReceivedMessage};
+use crate::message::{ChatroomType, MessageChain, ReceivedMessage};
 use crate::Result;
 
 #[derive(Deserialize, Debug)]
@@ -95,8 +95,9 @@ impl Api {
         }
     }
 
-    pub async fn send_friend_message(
+    pub async fn send_message(
         &self,
+        chatroom_type: ChatroomType,
         target: &str,
         message_chain: MessageChain,
     ) -> Result<()> {
@@ -114,9 +115,14 @@ impl Api {
             message_chain,
         };
 
+        let url = self.url(match chatroom_type {
+            ChatroomType::Friend => "/sendFriendMessage",
+            ChatroomType::Group => "/sendGroupMessage",
+        });
+
         let resp = self
             .client
-            .post(self.url("/sendFriendMessage"))
+            .post(url)
             .json(&params)
             .send()
             .await?

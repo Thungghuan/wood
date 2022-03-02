@@ -4,7 +4,7 @@ use tokio::time::sleep;
 
 use crate::api::Api;
 use crate::context::Context;
-use crate::message::{MessageChain, ReceivedMessage};
+use crate::message::{ChatroomType, MessageChain, ReceivedMessage};
 use crate::Result;
 
 pub struct BotConfig {
@@ -152,6 +152,8 @@ impl Bot {
             } => {
                 let ctx = Context::new(self, sender, &message_chain);
 
+                ctx.reply(message_chain).await?;
+
                 println!(
                     "Received group message from {}[{}] in group[{}]",
                     ctx.sender_nickname(),
@@ -164,12 +166,15 @@ impl Bot {
         Ok(())
     }
 
-    pub async fn send_friend_message(
+    pub async fn send_message(
         &self,
-        target: &String,
+        chatroom_type: ChatroomType,
+        target: &str,
         message_chain: MessageChain,
     ) -> Result<()> {
-        self.api.send_friend_message(&target, message_chain).await?;
+        self.api
+            .send_message(chatroom_type, &target, message_chain)
+            .await?;
         Ok(())
     }
 }

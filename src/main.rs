@@ -1,4 +1,4 @@
-use wood::message::{MessageChain, SingleMessage};
+use wood::message::{ChatroomType, MessageChain, SingleMessage};
 use wood::{Bot, Result};
 
 #[tokio::main]
@@ -24,7 +24,7 @@ async fn bot_init(bot: &Bot) -> Result<()> {
         text: start_message.to_string(),
     });
 
-    bot.send_friend_message(&bot.master_qq(), message_chain)
+    bot.send_message(ChatroomType::Friend, &bot.master_qq(), message_chain)
         .await?;
 
     Ok(())

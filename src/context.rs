@@ -49,10 +49,13 @@ impl<'ctx> Context<'ctx> {
         self.sender_nickname.clone()
     }
 
-    // TODO: reply in a group
     pub async fn reply(&self, message_chain: MessageChain) -> Result<()> {
         self.bot
-            .send_friend_message(&self.sender_id.to_string(), message_chain)
+            .send_message(
+                self.chatroom_type.clone(),
+                &self.chatroom_id.to_string(),
+                message_chain,
+            )
             .await?;
 
         Ok(())
