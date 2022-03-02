@@ -8,6 +8,12 @@ use sender::{FriendSender, GroupSender};
 mod message_chain;
 pub use message_chain::{MessageChain, SingleMessage};
 
+#[derive(Clone)]
+pub enum ChatroomType {
+    Friend,
+    Group,
+}
+
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 #[serde(tag = "type")]
 pub enum ReceivedMessage {

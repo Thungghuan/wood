@@ -1,6 +1,15 @@
 use serde::{Deserialize, Serialize};
 
-pub trait Sender {}
+use super::ChatroomType;
+
+pub trait Sender {
+    fn chatroom_type(&self) -> ChatroomType;
+    fn chatroom_id(&self) -> i32;
+    fn chatroom_name(&self) -> String;
+
+    fn sender_id(&self) -> i32;
+    fn sender_nickname(&self) -> String;
+}
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub enum Permission {
@@ -32,9 +41,50 @@ pub struct GroupSender {
     pub group: Group,
 }
 
-// TODO: implement the `Sender` trait.
-impl Sender for FriendSender {}
-impl Sender for GroupSender {}
+impl Sender for FriendSender {
+    fn chatroom_type(&self) -> ChatroomType {
+        ChatroomType::Friend
+    }
+
+    fn chatroom_id(&self) -> i32 {
+        self.id
+    }
+
+    // chatroom name is only for group message
+    fn chatroom_name(&self) -> String {
+        "".to_string()
+    }
+
+    fn sender_id(&self) -> i32 {
+        self.id
+    }
+
+    fn sender_nickname(&self) -> String {
+        self.nickname.clone()
+    }
+}
+
+impl Sender for GroupSender {
+    fn chatroom_type(&self) -> ChatroomType {
+        ChatroomType::Group
+    }
+
+    fn chatroom_id(&self) -> i32 {
+        self.group.id
+    }
+
+    fn chatroom_name(&self) -> String {
+        self.group.name.clone()
+    }
+
+    fn sender_id(&self) -> i32 {
+        self.id
+    }
+
+    fn sender_nickname(&self) -> String {
+        self.member_name.clone()
+    }
+}
 
 #[test]
 fn check_group_sender_deserialize_result() {
