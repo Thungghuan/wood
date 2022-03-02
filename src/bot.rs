@@ -4,7 +4,7 @@ use tokio::time::sleep;
 
 use crate::api::Api;
 use crate::context::Context;
-use crate::message::{MessageChain, ReceivedMessage};
+use crate::message::{MessageChain, ReceivedMessage, Sender};
 use crate::Result;
 
 pub struct BotConfig {
@@ -134,23 +134,26 @@ impl Bot {
                 sender,
                 message_chain,
             } => {
+                let ctx = Context::new(sender, message_chain);
+
                 println!(
                     "Received friend message from {}({})",
-                    sender.nickname, sender.id
+                    ctx.sender_nickname(),
+                    ctx.sender_id()
                 );
-                println!("{:#?}", message_chain);
-
-                Context::new(sender, message_chain);
             }
             ReceivedMessage::GroupMessage {
                 sender,
                 message_chain,
             } => {
+                let ctx = Context::new(sender, message_chain);
+
                 println!(
                     "Received group message from {}[{}] in group[{}]",
-                    sender.member_name, sender.id, sender.group.name
+                    ctx.sender_nickname(),
+                    ctx.sender_id(),
+                    ctx.chatroom_name()
                 );
-                println!("{:#?}", message_chain);
             }
         }
     }

@@ -1,13 +1,9 @@
-use crate::message::{MessageChain, Sender};
-
-pub enum MessageType {
-    Friend,
-    Group,
-}
+use crate::message::{ChatroomType, MessageChain, Sender};
 
 pub struct Context {
-    message_type: MessageType,
-    chatroom: i32,
+    chatroom_type: ChatroomType,
+    chatroom_id: i32,
+    chatroom_name: String,
 
     sender_id: i32,
     sender_nickname: String,
@@ -18,11 +14,34 @@ impl Context {
     where
         S: Sender,
     {
+        println!("{:#?}", message_chain);
+
         Context {
-            message_type: MessageType::Friend,
-            chatroom: 0,
-            sender_id: 0,
-            sender_nickname: "".to_string(),
+            chatroom_type: sender.chatroom_type(),
+            chatroom_id: sender.chatroom_id(),
+            chatroom_name: sender.chatroom_name(),
+            sender_id: sender.sender_id(),
+            sender_nickname: sender.sender_nickname(),
         }
+    }
+
+    pub fn chatroom_type(&self) -> ChatroomType {
+        self.chatroom_type.clone()
+    }
+
+    pub fn chatroom_id(&self) -> i32 {
+        self.chatroom_id
+    }
+
+    pub fn chatroom_name(&self) -> String {
+        self.chatroom_name.clone()
+    }
+
+    pub fn sender_id(&self) -> i32 {
+        self.sender_id
+    }
+
+    pub fn sender_nickname(&self) -> String {
+        self.sender_nickname.clone()
     }
 }
