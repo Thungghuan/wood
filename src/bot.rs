@@ -135,12 +135,12 @@ impl Bot {
             ReceivedMessage::FriendMessage {
                 sender,
                 message_chain,
-            } => Context::new(self, sender, message_chain),
+            } => Context::new(self, sender, &message_chain)?,
 
             ReceivedMessage::GroupMessage {
                 sender,
                 message_chain,
-            } => Context::new(self, sender, message_chain),
+            } => Context::new(self, sender, &message_chain)?,
         };
 
         ctx.reply(ctx.message_chain()).await?;

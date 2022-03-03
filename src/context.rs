@@ -1,6 +1,8 @@
-use crate::message::{ChatroomType, MessageChain, Sender};
+use crate::error::Error;
+use crate::message::{ChatroomType, MessageChain, Sender, SingleMessage};
 use crate::{Bot, Result};
 
+#[allow(dead_code)]
 pub struct Context<'ctx> {
     bot: &'ctx Bot,
 
@@ -11,17 +13,31 @@ pub struct Context<'ctx> {
     sender_id: i32,
     sender_nickname: String,
 
+    message_id: i32,
     message_chain: MessageChain,
 }
 
 impl<'ctx> Context<'ctx> {
-    pub fn new<S>(bot: &'ctx Bot, sender: S, message_chain: MessageChain) -> Self
+    pub fn new<S>(bot: &'ctx Bot, sender: S, message_chain: &MessageChain) -> Result<Self>
     where
         S: Sender,
     {
-        println!("{:#?}", message_chain);
+        let source_message = message_chain[0].clone();
+        let mut content_message_chain = vec![];
+        content_message_chain.extend_from_slice(&message_chain[1..]);
 
-        Context {
+        println!("{:#?}", content_message_chain);
+
+        let message_id = match source_message {
+            SingleMessage::Source { id, time: _ } => id,
+            _ => {
+                return Err(Error::new(
+                    "[Error] Receiving error message type when creating context.".to_string(),
+                ))
+            }
+        };
+
+        Ok(Context {
             bot,
 
             chatroom_type: sender.chatroom_type(),
@@ -31,8 +47,9 @@ impl<'ctx> Context<'ctx> {
             sender_id: sender.sender_id(),
             sender_nickname: sender.sender_nickname(),
 
-            message_chain,
-        }
+            message_id,
+            message_chain: content_message_chain,
+        })
     }
 
     pub fn chatroom_type(&self) -> ChatroomType {
