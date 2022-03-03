@@ -10,10 +10,12 @@ pub struct Context<'ctx> {
 
     sender_id: i32,
     sender_nickname: String,
+
+    message_chain: MessageChain,
 }
 
 impl<'ctx> Context<'ctx> {
-    pub fn new<S>(bot: &'ctx Bot, sender: S, message_chain: &MessageChain) -> Self
+    pub fn new<S>(bot: &'ctx Bot, sender: S, message_chain: MessageChain) -> Self
     where
         S: Sender,
     {
@@ -21,11 +23,15 @@ impl<'ctx> Context<'ctx> {
 
         Context {
             bot,
+
             chatroom_type: sender.chatroom_type(),
             chatroom_id: sender.chatroom_id(),
             chatroom_name: sender.chatroom_name(),
+
             sender_id: sender.sender_id(),
             sender_nickname: sender.sender_nickname(),
+
+            message_chain,
         }
     }
 
@@ -47,6 +53,15 @@ impl<'ctx> Context<'ctx> {
 
     pub fn sender_nickname(&self) -> String {
         self.sender_nickname.clone()
+    }
+
+    pub fn message_chain(&self) -> MessageChain {
+        let mut message_chain = vec![];
+        for single_message in &self.message_chain {
+            message_chain.push(single_message.clone())
+        }
+
+        message_chain
     }
 
     pub async fn reply(&self, message_chain: MessageChain) -> Result<()> {

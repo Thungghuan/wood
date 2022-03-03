@@ -131,36 +131,34 @@ impl Bot {
     }
 
     async fn handler(&self, message: ReceivedMessage) -> Result<()> {
-        match message {
+        let ctx = match message {
             ReceivedMessage::FriendMessage {
                 sender,
                 message_chain,
-            } => {
-                let ctx = Context::new(self, sender, &message_chain);
+            } => Context::new(self, sender, message_chain),
 
-                ctx.reply(message_chain).await?;
-
-                println!(
-                    "Received friend message from {}({})",
-                    ctx.sender_nickname(),
-                    ctx.sender_id()
-                );
-            }
             ReceivedMessage::GroupMessage {
                 sender,
                 message_chain,
-            } => {
-                let ctx = Context::new(self, sender, &message_chain);
+            } => Context::new(self, sender, message_chain),
+        };
 
-                ctx.reply(message_chain).await?;
+        ctx.reply(ctx.message_chain()).await?;
 
-                println!(
-                    "Received group message from {}[{}] in group[{}]",
-                    ctx.sender_nickname(),
-                    ctx.sender_id(),
-                    ctx.chatroom_name()
-                );
-            }
+        match ctx.chatroom_type() {
+            ChatroomType::Friend => println!(
+                "Received friend message from {}({})",
+                ctx.sender_nickname(),
+                ctx.sender_id()
+            ),
+
+            ChatroomType::Group => println!(
+                "Received group message from {}[{}] in group: {}[{}]",
+                ctx.sender_nickname(),
+                ctx.sender_id(),
+                ctx.chatroom_name(),
+                ctx.chatroom_id()
+            ),
         }
 
         Ok(())
