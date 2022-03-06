@@ -4,7 +4,7 @@ use tokio::time::sleep;
 
 use crate::api::Api;
 use crate::context::Context;
-use crate::event_listener::EventType;
+use crate::event_listener::{EventHandler, EventListener, EventType};
 use crate::message::{ChatroomType, MessageChain, ReceivedMessage};
 use crate::Result;
 
@@ -28,6 +28,8 @@ pub struct Bot {
     master_qq: String,
     session: String,
     api: Api,
+
+    event_listeners: Vec<EventListener>,
 }
 
 impl Bot {
@@ -37,6 +39,8 @@ impl Bot {
             master_qq: config.master_qq.clone(),
             session: session.to_string(),
             api: Api::new(&config.qq, base_url, session),
+
+            event_listeners: vec![],
         }
     }
 
@@ -177,7 +181,7 @@ impl Bot {
         Ok(())
     }
 
-    pub fn on(&self, event_type: &str) {
+    pub fn on(&mut self, event_type: &str, handler: EventHandler) {
         let event_type = EventType::from(event_type);
 
         if let EventType::Invalid(e) = event_type {
@@ -185,6 +189,9 @@ impl Bot {
             return;
         }
 
-        println!("Received valid event type: {}", event_type);
+        self.event_listeners
+            .push(EventListener::new(event_type, handler));
+
+        println!("{}", self.event_listeners[0].event_type());
     }
 }

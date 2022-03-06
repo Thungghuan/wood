@@ -1,8 +1,7 @@
+use crate::{context::Context, error::Error};
 use std::fmt::{Display, Formatter, Result as FmtResult};
 
-use crate::{error::Error, message::ChatroomType};
-
-pub(crate) enum EventType {
+pub enum EventType {
     Message,
     FriendMessage,
     GroupMessage,
@@ -10,9 +9,12 @@ pub(crate) enum EventType {
     Invalid(Error),
 }
 
+// pub type EventHandler = dyn FnOnce(Context) -> dyn Future<Output = Result<()>>;
+pub type EventHandler = Box<dyn FnOnce(Context)>;
+
 pub struct EventListener {
-    chatroom_type: ChatroomType,
     event_type: EventType,
+    pub handler: EventHandler,
 }
 
 impl Display for EventType {
@@ -40,5 +42,18 @@ impl From<&str> for EventType {
                 EventType::Invalid(Error::new(msg))
             }
         }
+    }
+}
+
+impl EventListener {
+    pub fn new(event_type: EventType, handler: EventHandler) -> Self {
+        EventListener {
+            event_type,
+            handler,
+        }
+    }
+
+    pub fn event_type(&self) -> String {
+        format!("{}", self.event_type)
     }
 }

@@ -4,12 +4,15 @@ use wood::{Bot, Result};
 #[tokio::main]
 async fn main() {
     let (config, session, base_url) = wood::init("config/config.yml").await;
-    let bot = Bot::new(config, &session, &base_url);
+    let mut bot = Bot::new(config, &session, &base_url);
 
-    bot.on("message");
+    bot.on(
+        "message",
+        Box::new(|ctx| println!("{:#?}", ctx.message_chain())),
+    );
 
     // This will see a error message.
-    bot.on("msg");
+    // bot.on("msg", Box::new(|ctx| println!("{:#?}", ctx.message_chain())));
 
     bot.start_with_callback(bot_init).await;
 
