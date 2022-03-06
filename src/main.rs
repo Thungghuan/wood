@@ -6,6 +6,11 @@ async fn main() {
     let (config, session, base_url) = wood::init("config/config.yml").await;
     let bot = Bot::new(config, &session, &base_url);
 
+    bot.on("message");
+
+    // This will see a error message.
+    bot.on("msg");
+
     bot.start_with_callback(bot_init).await;
 
     // You can also start the bot directly.

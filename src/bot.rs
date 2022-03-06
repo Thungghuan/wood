@@ -4,6 +4,7 @@ use tokio::time::sleep;
 
 use crate::api::Api;
 use crate::context::Context;
+use crate::event_listener::EventType;
 use crate::message::{ChatroomType, MessageChain, ReceivedMessage};
 use crate::Result;
 
@@ -174,5 +175,16 @@ impl Bot {
             .send_message(chatroom_type, &target, message_chain)
             .await?;
         Ok(())
+    }
+
+    pub fn on(&self, event_type: &str) {
+        let event_type = EventType::from(event_type);
+
+        if let EventType::Invalid(e) = event_type {
+            eprintln!("[Error] Adding event handler.\n{}", e);
+            return;
+        }
+
+        println!("Received valid event type: {}", event_type);
     }
 }
