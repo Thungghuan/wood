@@ -26,8 +26,6 @@ impl<'ctx> Context<'ctx> {
         let mut content_message_chain = vec![];
         content_message_chain.extend_from_slice(&message_chain[1..]);
 
-        println!("{:#?}", content_message_chain);
-
         let message_id = match source_message {
             SingleMessage::Source { id, time: _ } => id,
             _ => {

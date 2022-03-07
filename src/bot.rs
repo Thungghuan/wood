@@ -148,23 +148,13 @@ impl Bot {
             } => Context::new(self, sender, &message_chain)?,
         };
 
+        self.event_listeners
+            .iter()
+            .for_each(|listener| match listener.event_type() {
+                _ => listener.handle(&ctx),
+            });
+
         ctx.reply(ctx.message_chain()).await?;
-
-        match ctx.chatroom_type() {
-            ChatroomType::Friend => println!(
-                "Received friend message from {}({})",
-                ctx.sender_nickname(),
-                ctx.sender_id()
-            ),
-
-            ChatroomType::Group => println!(
-                "Received group message from {}[{}] in group: {}[{}]",
-                ctx.sender_nickname(),
-                ctx.sender_id(),
-                ctx.chatroom_name(),
-                ctx.chatroom_id()
-            ),
-        }
 
         Ok(())
     }
@@ -181,7 +171,7 @@ impl Bot {
         Ok(())
     }
 
-    pub fn on(&mut self, event_type: &str, handler: EventHandler) {
+    pub fn on(&mut self, event_type: &str, handler: &'static EventHandler) {
         let event_type = EventType::from(event_type);
 
         if let EventType::Invalid(e) = event_type {
@@ -191,7 +181,5 @@ impl Bot {
 
         self.event_listeners
             .push(EventListener::new(event_type, handler));
-
-        println!("{}", self.event_listeners[0].event_type());
     }
 }

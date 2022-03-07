@@ -6,10 +6,23 @@ async fn main() {
     let (config, session, base_url) = wood::init("config/config.yml").await;
     let mut bot = Bot::new(config, &session, &base_url);
 
-    bot.on(
-        "message",
-        Box::new(|ctx| println!("{:#?}", ctx.message_chain())),
-    );
+    bot.on("message", &|ctx| println!("{:#?}", ctx.message_chain()));
+
+    bot.on("message", &|ctx| match ctx.chatroom_type() {
+        ChatroomType::Friend => println!(
+            "Received friend message from {}({})",
+            ctx.sender_nickname(),
+            ctx.sender_id()
+        ),
+
+        ChatroomType::Group => println!(
+            "Received group message from {}[{}] in group: {}[{}]",
+            ctx.sender_nickname(),
+            ctx.sender_id(),
+            ctx.chatroom_name(),
+            ctx.chatroom_id()
+        ),
+    });
 
     // This will see a error message.
     // bot.on("msg", Box::new(|ctx| println!("{:#?}", ctx.message_chain())));

@@ -9,12 +9,12 @@ pub enum EventType {
     Invalid(Error),
 }
 
-// pub type EventHandler = dyn FnOnce(Context) -> dyn Future<Output = Result<()>>;
-pub type EventHandler = Box<dyn FnOnce(Context)>;
+// pub type EventHandler = dyn Fn(Context) -> dyn Future<Output = Result<()>>;
+pub type EventHandler = dyn Fn(&Context);
 
 pub struct EventListener {
     event_type: EventType,
-    pub handler: EventHandler,
+    handler: Box<EventHandler>,
 }
 
 impl Display for EventType {
@@ -38,7 +38,7 @@ impl From<&str> for EventType {
             "friendMessage" => EventType::FriendMessage,
             "groupMessage" => EventType::GroupMessage,
             _ => {
-                let msg = format!("Invalid message type, received `{}`, expected `message`, `friendMessage` or `groupMessage`.", event_type);
+                let msg = format!("Invalid message type:\n received `{}`, expected `message`, `friendMessage` or `groupMessage`.", event_type);
                 EventType::Invalid(Error::new(msg))
             }
         }
@@ -46,14 +46,18 @@ impl From<&str> for EventType {
 }
 
 impl EventListener {
-    pub fn new(event_type: EventType, handler: EventHandler) -> Self {
+    pub fn new(event_type: EventType, handler: &'static EventHandler) -> Self {
         EventListener {
             event_type,
-            handler,
+            handler: Box::new(handler),
         }
     }
 
     pub fn event_type(&self) -> String {
         format!("{}", self.event_type)
+    }
+
+    pub fn handle(&self, ctx: &Context) {
+        (self.handler)(ctx);
     }
 }
