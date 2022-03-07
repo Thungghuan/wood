@@ -38,7 +38,7 @@ impl From<&str> for EventType {
             "friendMessage" => EventType::FriendMessage,
             "groupMessage" => EventType::GroupMessage,
             _ => {
-                let msg = format!("Invalid message type:\n received `{}`, expected `message`, `friendMessage` or `groupMessage`.", event_type);
+                let msg = format!("Invalid message type: received `{}`, expected `message`, `friendMessage` or `groupMessage`.", event_type);
                 EventType::Invalid(Error::new(msg))
             }
         }

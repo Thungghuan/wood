@@ -58,7 +58,7 @@ impl Bot {
 
     pub async fn start_with_callback<'a, F, T>(&'a self, cb: F)
     where
-        F: FnOnce(&'a Bot) -> T,
+        F: Fn(&'a Bot) -> T,
         T: Future<Output = Result<()>>,
     {
         // If error occurred, the bot will not start.
