@@ -1,5 +1,7 @@
-use crate::{context::Context, error::Error};
+use crate::{context::Context, error::Error, Result};
 use std::fmt::{Display, Formatter, Result as FmtResult};
+use std::future::Future;
+use std::pin::Pin;
 
 pub enum EventType {
     Message,
@@ -9,8 +11,7 @@ pub enum EventType {
     Invalid(Error),
 }
 
-// pub type EventHandler = dyn Fn(Context) -> dyn Future<Output = Result<()>>;
-pub type EventHandler = dyn Fn(&Context);
+pub type EventHandler = dyn Fn(Context) -> Pin<Box<dyn Future<Output = Result<()>>>>;
 
 pub struct EventListener {
     event_type: EventType,
@@ -46,10 +47,14 @@ impl From<&str> for EventType {
 }
 
 impl EventListener {
-    pub fn new(event_type: EventType, handler: &'static EventHandler) -> Self {
+    pub fn new<F, Fut>(event_type: EventType, handler: &'static F) -> Self
+    where
+        F: Fn(Context) -> Fut,
+        Fut: Future<Output = Result<()>> + 'static,
+    {
         EventListener {
             event_type,
-            handler: Box::new(handler),
+            handler: Box::new(|ctx| Box::pin(handler(ctx))),
         }
     }
 
@@ -57,8 +62,8 @@ impl EventListener {
         format!("{}", self.event_type)
     }
 
-    pub fn handle(&self, ctx: &Context) {
-        (self.handler)(ctx);
+    pub async fn handle(&self, ctx: Context) -> Result<()> {
+        (self.handler)(ctx).await
     }
 }
 
@@ -73,12 +78,24 @@ mod tests {
         message: String,
     }
 
-    type EventHandler =
-        Box<dyn Fn(Context) -> Pin<Box<dyn Future<Output = Result<String>>>>>;
+    type EventHandler = dyn Fn(Context) -> Pin<Box<dyn Future<Output = Result<String>>>>;
 
     struct EventListener {
         event_type: &'static str,
-        handler: EventHandler,
+        handler: Box<EventHandler>,
+    }
+
+    impl EventListener {
+        fn new<F, Fut>(event_type: &'static str, handler: &'static F) -> Self
+        where
+            F: Fn(Context) -> Fut,
+            Fut: Future<Output = Result<String>> + 'static,
+        {
+            EventListener {
+                event_type,
+                handler: Box::new(|ctx| Box::pin(handler(ctx))),
+            }
+        }
     }
 
     async fn get_context_message(ctx: Context) -> Result<String> {
@@ -89,10 +106,7 @@ mod tests {
     async fn store_async_function_in_vector() {
         let mut event_listeners: Vec<EventListener> = vec![];
 
-        event_listeners.push(EventListener {
-            event_type: "message",
-            handler: Box::new(|ctx| Box::pin(get_context_message(ctx))),
-        });
+        event_listeners.push(EventListener::new("message", &get_context_message));
 
         let ctx = Context {
             message: "message".to_string(),

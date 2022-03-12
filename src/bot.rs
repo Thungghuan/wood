@@ -4,7 +4,7 @@ use tokio::time::sleep;
 
 use crate::api::Api;
 use crate::context::Context;
-use crate::event_listener::{EventHandler, EventListener, EventType};
+use crate::event_listener::{EventListener, EventType};
 use crate::message::{ChatroomType, MessageChain, ReceivedMessage};
 use crate::Result;
 
@@ -44,7 +44,7 @@ impl Bot {
         }
     }
 
-    fn clone(&self) -> Self {
+    pub fn clone(&self) -> Self {
         Bot {
             qq: self.qq.clone(),
             master_qq: self.master_qq.clone(),
@@ -160,13 +160,11 @@ impl Bot {
             } => Context::new(self.clone(), sender, &message_chain)?,
         };
 
-        self.event_listeners
-            .iter()
-            .for_each(|listener| match listener.event_type() {
-                _ => listener.handle(&ctx),
-            });
-
-        ctx.reply(ctx.message_chain()).await?;
+        for listener in &self.event_listeners {
+            match listener.event_type() {
+                _ => listener.handle(ctx.clone()).await.unwrap(),
+            }
+        }
 
         Ok(())
     }
@@ -183,7 +181,11 @@ impl Bot {
         Ok(())
     }
 
-    pub fn on(&mut self, event_type: &str, handler: &'static EventHandler) {
+    pub fn on<F, Fut>(&mut self, event_type: &str, handler: &'static F)
+    where
+        F: Fn(Context) -> Fut,
+        Fut: Future<Output = Result<()>> + 'static,
+    {
         let event_type = EventType::from(event_type);
 
         if let EventType::Invalid(e) = event_type {

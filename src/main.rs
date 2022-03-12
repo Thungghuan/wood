@@ -1,32 +1,34 @@
 use wood::message::{ChatroomType, MessageChain, SingleMessage};
-use wood::Bot;
+use wood::{context::Context, Bot, Result};
 
 #[tokio::main]
 async fn main() {
     let (config, session, base_url) = wood::init("config/config.yml").await;
     let mut bot = Bot::new(config, &session, &base_url);
 
-    bot.on("message", &|ctx| println!("{:#?}", ctx.message_chain()));
+    bot.on("message", &async_handler);
 
-    bot.on("message", &|ctx| match ctx.chatroom_type() {
-        ChatroomType::Friend => println!(
-            "Received friend message from {}({})",
-            ctx.sender_nickname(),
-            ctx.sender_id()
-        ),
+    // bot.on("message", &|ctx| println!("{:#?}", ctx.message_chain()));
 
-        ChatroomType::Group => println!(
-            "Received group message from {}[{}] in group: {}[{}]",
-            ctx.sender_nickname(),
-            ctx.sender_id(),
-            ctx.chatroom_name(),
-            ctx.chatroom_id()
-        ),
-    });
+    // bot.on("message", &|ctx| match ctx.chatroom_type() {
+    //     ChatroomType::Friend => println!(
+    //         "Received friend message from {}({})",
+    //         ctx.sender_nickname(),
+    //         ctx.sender_id()
+    //     ),
 
-    // You'll see a error message that tells that
-    // you are handling a `InvalidEvent`.
-    bot.on("msg", &|_| {});
+    //     ChatroomType::Group => println!(
+    //         "Received group message from {}[{}] in group: {}[{}]",
+    //         ctx.sender_nickname(),
+    //         ctx.sender_id(),
+    //         ctx.chatroom_name(),
+    //         ctx.chatroom_id()
+    //     ),
+    // });
+
+    // // You'll see a error message that tells that
+    // // you are listening a `InvalidEvent`.
+    // bot.on("msg", &|_| {});
 
     // Start your bot with a callback.
     bot.start_with_callback(|bot| async {
@@ -50,4 +52,10 @@ async fn main() {
 
     // You can also start the bot directly.
     // bot.start().await;
+}
+
+async fn async_handler(ctx: Context) -> Result<()> {
+    ctx.reply(ctx.message_chain()).await?;
+
+    Ok(())
 }
