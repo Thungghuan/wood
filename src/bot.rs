@@ -44,6 +44,17 @@ impl Bot {
         }
     }
 
+    fn clone(&self) -> Self {
+        Bot {
+            qq: self.qq.clone(),
+            master_qq: self.master_qq.clone(),
+            session: self.session.clone(),
+            api: self.api.clone(),
+
+            event_listeners: vec![],
+        }
+    }
+
     pub fn qq(&self) -> String {
         self.qq.clone()
     }
@@ -136,16 +147,17 @@ impl Bot {
     }
 
     async fn handler(&self, message: ReceivedMessage) -> Result<()> {
+        // Fix the f**king lifetime error by just clone it instead borrow it.
         let ctx = match message {
             ReceivedMessage::FriendMessage {
                 sender,
                 message_chain,
-            } => Context::new(self, sender, &message_chain)?,
+            } => Context::new(self.clone(), sender, &message_chain)?,
 
             ReceivedMessage::GroupMessage {
                 sender,
                 message_chain,
-            } => Context::new(self, sender, &message_chain)?,
+            } => Context::new(self.clone(), sender, &message_chain)?,
         };
 
         self.event_listeners

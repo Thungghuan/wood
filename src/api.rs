@@ -10,6 +10,7 @@ struct BasicResponse {
     msg: String,
 }
 
+#[derive(Clone)]
 pub struct Api {
     qq: String,
     session: String,
