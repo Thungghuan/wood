@@ -61,3 +61,51 @@ impl EventListener {
         (self.handler)(ctx);
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use std::{future::Future, pin::Pin};
+
+    use crate::Result;
+
+    #[derive(Clone)]
+    struct Context {
+        message: String,
+    }
+
+    type EventHandler =
+        Box<dyn Fn(Context) -> Pin<Box<dyn Future<Output = Result<String>>>>>;
+
+    struct EventListener {
+        event_type: &'static str,
+        handler: EventHandler,
+    }
+
+    async fn get_context_message(ctx: Context) -> Result<String> {
+        Ok(ctx.message.to_string())
+    }
+
+    #[tokio::test]
+    async fn store_async_function_in_vector() {
+        let mut event_listeners: Vec<EventListener> = vec![];
+
+        event_listeners.push(EventListener {
+            event_type: "message",
+            handler: Box::new(|ctx| Box::pin(get_context_message(ctx))),
+        });
+
+        let ctx = Context {
+            message: "message".to_string(),
+        };
+
+        for listener in event_listeners {
+            match listener.event_type {
+                "message" => assert_eq!(
+                    (listener.handler)(ctx.clone()).await.unwrap(),
+                    String::from("message")
+                ),
+                _ => continue,
+            }
+        }
+    }
+}
