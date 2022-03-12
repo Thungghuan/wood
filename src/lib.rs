@@ -8,7 +8,7 @@ pub use error::Result;
 
 pub mod message;
 
-pub mod context;
+mod context;
 
 mod event_listener;
 
