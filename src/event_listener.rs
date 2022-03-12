@@ -3,6 +3,7 @@ use std::fmt::{Display, Formatter, Result as FmtResult};
 use std::future::Future;
 use std::pin::Pin;
 
+#[derive(Clone)]
 pub enum EventType {
     Message,
     FriendMessage,
@@ -58,8 +59,8 @@ impl EventListener {
         }
     }
 
-    pub fn event_type(&self) -> String {
-        format!("{}", self.event_type)
+    pub fn event_type(&self) -> EventType {
+        self.event_type.clone()
     }
 
     pub async fn handle(&self, ctx: Context) -> Result<()> {

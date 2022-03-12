@@ -161,8 +161,27 @@ impl Bot {
         };
 
         for listener in &self.event_listeners {
-            match listener.event_type() {
-                _ => listener.handle(ctx.clone()).await.unwrap(),
+            let will_handle = match listener.event_type() {
+                EventType::FriendMessage => {
+                    if ctx.chatroom_type() == ChatroomType::Friend {
+                        true
+                    } else {
+                        false
+                    }
+                }
+                EventType::GroupMessage => {
+                    if ctx.chatroom_type() == ChatroomType::Group {
+                        true
+                    } else {
+                        false
+                    }
+                }
+                EventType::Message => true,
+                _ => false
+            };
+
+            if will_handle {
+                listener.handle(ctx.clone()).await.unwrap()
             }
         }
 

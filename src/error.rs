@@ -2,6 +2,7 @@ use std::fmt::{Debug, Display, Formatter, Result as FmtResult};
 
 pub type Result<T> = std::result::Result<T, Error>;
 
+#[derive(Clone)]
 pub struct Error {
     msg: String,
 }
