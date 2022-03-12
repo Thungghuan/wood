@@ -80,47 +80,52 @@ mod tests {
     }
 
     type EventHandler = dyn Fn(Context) -> Pin<Box<dyn Future<Output = Result<String>>>>;
-
     struct EventListener {
-        event_type: &'static str,
         handler: Box<EventHandler>,
     }
 
     impl EventListener {
-        fn new<F, Fut>(event_type: &'static str, handler: &'static F) -> Self
+        fn new<F, Fut>(handler: &'static F) -> Self
         where
             F: Fn(Context) -> Fut,
             Fut: Future<Output = Result<String>> + 'static,
         {
             EventListener {
-                event_type,
                 handler: Box::new(|ctx| Box::pin(handler(ctx))),
             }
         }
     }
 
-    async fn get_context_message(ctx: Context) -> Result<String> {
-        Ok(ctx.message.to_string())
+    fn store_async_function<F, Fut>(event_listeners: &mut Vec<EventListener>, handler: &'static F)
+    where
+        F: Fn(Context) -> Fut,
+        Fut: Future<Output = Result<String>> + 'static,
+    {
+        event_listeners.push(EventListener::new(handler));
     }
 
     #[tokio::test]
     async fn store_async_function_in_vector() {
         let mut event_listeners: Vec<EventListener> = vec![];
 
-        event_listeners.push(EventListener::new("message", &get_context_message));
+        async fn get_context_message(ctx: Context) -> Result<String> {
+            Ok(ctx.message.to_string())
+        }
+
+        store_async_function(&mut event_listeners, &get_context_message);
+        store_async_function(&mut event_listeners, &|ctx| async move {
+            Ok(ctx.message.to_string())
+        });
 
         let ctx = Context {
             message: "message".to_string(),
         };
 
         for listener in event_listeners {
-            match listener.event_type {
-                "message" => assert_eq!(
-                    (listener.handler)(ctx.clone()).await.unwrap(),
-                    String::from("message")
-                ),
-                _ => continue,
-            }
+            assert_eq!(
+                (listener.handler)(ctx.clone()).await.unwrap(),
+                String::from("message")
+            );
         }
     }
 }
