@@ -3,8 +3,8 @@ use crate::message::{ChatroomType, MessageChain, Sender, SingleMessage};
 use crate::{Bot, Result};
 
 #[allow(dead_code)]
-pub struct Context<'ctx> {
-    bot: &'ctx Bot,
+pub struct Context {
+    bot: Bot,
 
     chatroom_type: ChatroomType,
     chatroom_id: i32,
@@ -17,8 +17,8 @@ pub struct Context<'ctx> {
     message_chain: MessageChain,
 }
 
-impl<'ctx> Context<'ctx> {
-    pub fn new<S>(bot: &'ctx Bot, sender: S, message_chain: &MessageChain) -> Result<Self>
+impl Context {
+    pub fn new<S>(bot: Bot, sender: S, message_chain: &MessageChain) -> Result<Self>
     where
         S: Sender,
     {
@@ -48,6 +48,22 @@ impl<'ctx> Context<'ctx> {
             message_id,
             message_chain: content_message_chain,
         })
+    }
+
+    pub fn clone(&self) -> Self {
+        Context {
+            bot: self.bot.clone(),
+
+            chatroom_type: self.chatroom_type.clone(),
+            chatroom_id: self.chatroom_id,
+            chatroom_name: self.chatroom_name.clone(),
+
+            sender_id: self.sender_id,
+            sender_nickname: self.sender_nickname.clone(),
+
+            message_id: self.message_id,
+            message_chain: self.message_chain.clone(),
+        }
     }
 
     pub fn chatroom_type(&self) -> ChatroomType {
