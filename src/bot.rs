@@ -146,8 +146,18 @@ impl Bot {
         }
     }
 
+    fn will_handle(&self, ctx: &Context, listener: &EventListener) -> bool {
+        match listener.event_type() {
+            EventType::FriendMessage => ctx.chatroom_type() == ChatroomType::Friend,
+            EventType::GroupMessage => ctx.chatroom_type() == ChatroomType::Group,
+            EventType::Message => true,
+            _ => false,
+        }
+    }
+
     async fn handler(&self, message: ReceivedMessage) -> Result<()> {
-        // Fix the f**king lifetime error by just clone it instead borrow it.
+        // Fix the f**king lifetime error by just cloning it
+        // instead of borrowing it.
         let ctx = match message {
             ReceivedMessage::FriendMessage {
                 sender,
@@ -161,24 +171,7 @@ impl Bot {
         };
 
         for listener in &self.event_listeners {
-            let will_handle = match listener.event_type() {
-                EventType::FriendMessage => {
-                    if ctx.chatroom_type() == ChatroomType::Friend {
-                        true
-                    } else {
-                        false
-                    }
-                }
-                EventType::GroupMessage => {
-                    if ctx.chatroom_type() == ChatroomType::Group {
-                        true
-                    } else {
-                        false
-                    }
-                }
-                EventType::Message => true,
-                _ => false
-            };
+            let will_handle = self.will_handle(&ctx, listener);
 
             if will_handle {
                 listener.handle(ctx.clone()).await.unwrap()
