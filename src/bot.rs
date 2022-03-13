@@ -6,22 +6,8 @@ use crate::api::Api;
 use crate::context::Context;
 use crate::event_listener::{EventListener, EventType};
 use crate::message::{ChatroomType, MessageChain, ReceivedMessage};
+use crate::utils::BotConfig;
 use crate::Result;
-
-pub struct BotConfig {
-    qq: String,
-    master_qq: String,
-    pub setting_file: String,
-}
-impl BotConfig {
-    pub fn new(qq: String, master_qq: String, setting_file: String) -> Self {
-        BotConfig {
-            qq,
-            master_qq,
-            setting_file,
-        }
-    }
-}
 
 pub struct Bot {
     qq: String,

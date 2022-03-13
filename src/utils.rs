@@ -2,8 +2,14 @@ use serde::{Deserialize, Serialize};
 use std::{fs::File, io::Read};
 use yaml_rust::{Yaml, YamlLoader};
 
-use crate::bot::BotConfig;
+#[derive(Debug, PartialEq)]
+pub struct BotConfig {
+    pub qq: String,
+    pub master_qq: String,
+    pub setting_file: String,
+}
 
+#[derive(Debug, PartialEq)]
 struct BotSettings {
     verify_key: String,
     host: String,
@@ -26,19 +32,19 @@ fn load_yaml_file(path: &str) -> Yaml {
     YamlLoader::load_from_str(&contents).unwrap()[0].clone()
 }
 
-fn load_bot_config(path: &str) -> BotConfig {
-    let config = load_yaml_file(path);
-
+fn load_bot_config(config: Yaml) -> BotConfig {
     let qq = String::from(config["qq"].as_str().unwrap());
     let master_qq = String::from(config["masterQQ"].as_str().unwrap());
     let setting_file = String::from(config["settingFile"].as_str().unwrap());
 
-    BotConfig::new(qq, master_qq, setting_file)
+    BotConfig {
+        qq,
+        master_qq,
+        setting_file,
+    }
 }
 
-fn load_bot_settings(path: &str) -> BotSettings {
-    let config = load_yaml_file(path);
-
+fn load_bot_settings(config: Yaml) -> BotSettings {
     let verify_key = config["verifyKey"].as_str().unwrap().to_string();
     let host = config["adapterSettings"]["http"]["host"]
         .as_str()
@@ -88,10 +94,73 @@ async fn get_session(base_url: &str, verify_key: &str) -> String {
 }
 
 pub async fn init(path: &str) -> (BotConfig, String, String) {
-    let config = load_bot_config(path);
-    let settings = load_bot_settings(&config.setting_file);
+    let config = load_bot_config(load_yaml_file(path));
+    let settings = load_bot_settings(load_yaml_file(&config.setting_file));
     let base_url = String::from("http://") + &settings.host + ":" + &settings.port;
     let session = get_session(&base_url, &settings.verify_key).await;
 
     (config, session, base_url)
+}
+
+#[cfg(test)]
+mod test_utils {
+    use super::{load_bot_config, load_bot_settings, BotConfig, BotSettings};
+    use yaml_rust::YamlLoader;
+
+    #[test]
+    fn check_load_bot_config() {
+        let config_file_string = r#"
+# QQ number of bot
+qq: '10000000'
+# QQ number of the master
+masterQQ: '10000000'
+# Path to the `settings.yml` file for mirai
+settingFile: 'config/settings.yml'
+        "#;
+        let config = YamlLoader::load_from_str(&config_file_string).unwrap()[0].clone();
+
+        let bot_config = BotConfig {
+            qq: "10000000".to_string(),
+            master_qq: "10000000".to_string(),
+            setting_file: "config/settings.yml".to_string(),
+        };
+
+        assert_eq!(load_bot_config(config), bot_config);
+    }
+
+    #[test]
+    fn check_load_bot_settings() {
+        let settings_file_string = r#"
+## comments
+
+## [Ignore]
+adapters:
+  - http
+  - ws
+
+## get VERIFY-KEY
+enableVerify: true
+verifyKey: verify-key
+
+## get http.host and http.port only
+adapterSettings:
+  http:
+    host: mirai.host
+    port: 80
+    # cors: [*]
+  ws:
+    host: mirai.host
+    port: 80
+    reservedSyncId: -1
+        "#;
+        let config = YamlLoader::load_from_str(&settings_file_string).unwrap()[0].clone();
+
+        let bot_settings = BotSettings {
+            verify_key: "verify-key".to_string(),
+            host: "mirai.host".to_string(),
+            port: "80".to_string(),
+        };
+
+        assert_eq!(load_bot_settings(config), bot_settings);
+    }
 }
