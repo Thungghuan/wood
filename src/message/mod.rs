@@ -6,7 +6,9 @@ pub use sender::Sender;
 use sender::{FriendSender, GroupSender};
 
 mod message_chain;
-pub use message_chain::{MessageChain, SingleMessage};
+pub use message_chain::{
+    create_plain_message, create_plain_message_chain, MessageChain, SingleMessage,
+};
 
 #[derive(Clone, PartialEq)]
 pub enum ChatroomType {

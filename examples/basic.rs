@@ -1,4 +1,4 @@
-use wood::message::{ChatroomType, MessageChain, SingleMessage};
+use wood::message::{create_plain_message_chain, ChatroomType};
 use wood::Bot;
 
 #[tokio::main]
@@ -49,24 +49,20 @@ async fn main() {
     bot.on("command", &|ctx| async move {
         let command_name = ctx.command_name();
 
-        let mut message_chain: MessageChain = vec![];
-        message_chain.push(SingleMessage::Plain {
-            text: if command_name == "" {
-                format!("Received empty command.")
-            } else {
-                format!("Received command: {}", ctx.command_name())
-            },
-        });
+        let text = if command_name == "" {
+            format!("Received empty command.")
+        } else {
+            format!("Received command: {}", ctx.command_name())
+        };
+
+        let message_chain = create_plain_message_chain(text);
         ctx.quote_reply(message_chain).await?;
 
         Ok(())
     });
 
     bot.command("hi", &|ctx| async move {
-        let mut message_chain: MessageChain = vec![];
-        message_chain.push(SingleMessage::Plain {
-            text: "hi".to_string(),
-        });
+        let message_chain = create_plain_message_chain("hi".to_string());
         ctx.reply(message_chain).await?;
 
         Ok(())
@@ -79,11 +75,8 @@ async fn main() {
         println!("Session key: {}", bot.session());
 
         // Send a start message to the master.
-        let start_message = "Hello master, your bot start successfully!";
-        let mut message_chain: MessageChain = vec![];
-        message_chain.push(SingleMessage::Plain {
-            text: start_message.to_string(),
-        });
+        let start_message = "Hello master, your bot start successfully!".to_string();
+        let message_chain = create_plain_message_chain(start_message);
 
         bot.send_message(ChatroomType::Friend, bot.master_qq(), message_chain, None)
             .await?;

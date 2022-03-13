@@ -34,6 +34,18 @@ pub enum SingleMessage {
 
 pub type MessageChain = Vec<SingleMessage>;
 
+pub fn create_plain_message(text: String) -> SingleMessage {
+    SingleMessage::Plain { text }
+}
+
+pub fn create_plain_message_chain(text: String) -> MessageChain {
+    let mut message_chain = vec![];
+
+    message_chain.push(create_plain_message(text));
+
+    message_chain
+}
+
 #[test]
 fn check_message_chain_serialize_result() {
     let source_message = SingleMessage::Source {
