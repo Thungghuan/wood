@@ -53,7 +53,7 @@ fn check_message_chain_serialize_result() {
 
     assert_eq!(
         serde_json::to_string(&at_message).unwrap(),
-        "{\"type\":\"At\",\"target\":\"20211113\",\"display\":\"土土木木\"}"
+        "{\"type\":\"At\",\"target\":20211113,\"display\":\"土土木木\"}"
     );
 
     let plain_message = SingleMessage::Plain {
