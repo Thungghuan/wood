@@ -82,7 +82,7 @@ impl Context {
                 if let Some(caps) = command_pattern.captures(text) {
                     command_name = caps.get(1).map_or("", |m| m.as_str());
 
-                    let mut split = text.split(" ");
+                    let mut split = text.trim().split(" ");
                     split.next();
                     for attr in split {
                         command_attrs.push(attr)
@@ -91,11 +91,10 @@ impl Context {
             }
         }
 
-
         let mut content_message_chain = vec![];
 
-        content_message_chain.push(SingleMessage::Plain{
-            text: command_attrs.join(" ")
+        content_message_chain.push(SingleMessage::Plain {
+            text: command_attrs.join(" "),
         });
 
         content_message_chain.extend_from_slice(&message_chain[1..]);
