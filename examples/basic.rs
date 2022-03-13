@@ -47,9 +47,15 @@ async fn main() {
     bot.on("msg", &|_| async { Ok(()) });
 
     bot.on("command", &|ctx| async move {
+        let command_name = ctx.command_name();
+
         let mut message_chain: MessageChain = vec![];
         message_chain.push(SingleMessage::Plain {
-            text: "Received a command".to_string(),
+            text: if command_name == "" {
+                format!("Received empty command.")
+            } else {
+                format!("Received command: {}", ctx.command_name())
+            },
         });
         ctx.quote_reply(message_chain).await?;
 

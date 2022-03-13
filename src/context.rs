@@ -1,3 +1,5 @@
+use regex::Regex;
+
 use crate::error::Error;
 use crate::message::{ChatroomType, MessageChain, Sender, SingleMessage};
 use crate::{Bot, Result};
@@ -5,6 +7,8 @@ use crate::{Bot, Result};
 #[allow(dead_code)]
 pub struct Context {
     bot: Bot,
+
+    is_at_me: bool,
 
     chatroom_type: ChatroomType,
     chatroom_id: i64,
@@ -35,10 +39,26 @@ impl Context {
             }
         };
 
+        let chatroom_type = sender.chatroom_type();
+
+        let is_at_me = match chatroom_type {
+            ChatroomType::Friend => false,
+            ChatroomType::Group => match content_message_chain[0] {
+                SingleMessage::At { target, .. } => target == bot.qq(),
+                _ => false,
+            },
+        };
+
+        if is_at_me {
+            content_message_chain.remove(0);
+        }
+
         Ok(Context {
             bot,
 
-            chatroom_type: sender.chatroom_type(),
+            is_at_me,
+
+            chatroom_type,
             chatroom_id: sender.chatroom_id(),
             chatroom_name: sender.chatroom_name(),
 
@@ -53,6 +73,8 @@ impl Context {
     pub fn clone(&self) -> Self {
         Context {
             bot: self.bot.clone(),
+
+            is_at_me: self.is_at_me,
 
             chatroom_type: self.chatroom_type.clone(),
             chatroom_id: self.chatroom_id,
@@ -110,13 +132,7 @@ impl Context {
     }
 
     pub fn is_at_me(&self) -> bool {
-        match self.chatroom_type {
-            ChatroomType::Friend => false,
-            ChatroomType::Group => match self.message_chain[0] {
-                SingleMessage::At { target, .. } => target == self.bot.qq(),
-                _ => false,
-            },
-        }
+        self.is_at_me
     }
 
     pub fn is_command(&self) -> bool {
@@ -128,12 +144,29 @@ impl Context {
             ChatroomType::Group => {
                 self.is_at_me()
                     // the second `SingleMessage` will be the content
-                    && match &self.message_chain[1] {
+                    && match &self.message_chain[0] {
                         SingleMessage::Plain { text } => text.as_str().trim().starts_with("/"),
                         _ => false,
                     }
             }
         }
+    }
+
+    pub fn command_name(&self) -> &str {
+        let mut name = "";
+
+        if self.is_command() {
+            let command_pattern = Regex::new(r"^\s*/(.+)").unwrap();
+            if let SingleMessage::Plain { text } = &self.message_chain[0] {
+                if let Some(caps) = command_pattern.captures(text) {
+                    name = caps.get(1).map_or("", |m| m.as_str())
+                }
+            }
+        } else {
+            println!("{}", Error::new("[Warning] Call the `command_name` method only when the `is_command` return true."))
+        }
+
+        name
     }
 
     pub async fn reply(&self, message_chain: MessageChain) -> Result<()> {
