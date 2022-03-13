@@ -19,6 +19,9 @@ pub type EventHandler = dyn Fn(Context) -> Pin<Box<dyn Future<Output = Result<()
 pub struct EventListener {
     event_type: EventType,
     handler: Box<EventHandler>,
+
+    // this will be `None` if the event_type is not `Command`
+    command_name: Option<String>,
 }
 
 impl Display for EventType {
@@ -52,7 +55,11 @@ impl From<&str> for EventType {
 }
 
 impl EventListener {
-    pub fn new<F, Fut>(event_type: EventType, handler: &'static F) -> Self
+    pub fn new<F, Fut>(
+        event_type: EventType,
+        handler: &'static F,
+        command_name: Option<String>,
+    ) -> Self
     where
         F: Fn(Context) -> Fut,
         Fut: Future<Output = Result<()>> + 'static,
@@ -60,6 +67,7 @@ impl EventListener {
         EventListener {
             event_type,
             handler: Box::new(|ctx| Box::pin(handler(ctx))),
+            command_name,
         }
     }
 
@@ -69,6 +77,10 @@ impl EventListener {
 
     pub async fn handle(&self, ctx: Context) -> Result<()> {
         (self.handler)(ctx).await
+    }
+
+    pub fn command_name(&self) -> Option<String> {
+        self.command_name.clone()
     }
 }
 

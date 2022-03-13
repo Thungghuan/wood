@@ -62,6 +62,16 @@ async fn main() {
         Ok(())
     });
 
+    bot.command("hi", &|ctx| async move {
+        let mut message_chain: MessageChain = vec![];
+        message_chain.push(SingleMessage::Plain {
+            text: "hi".to_string(),
+        });
+        ctx.reply(message_chain).await?;
+
+        Ok(())
+    });
+
     // Start your bot with a callback.
     bot.start_with_callback(|bot| async {
         println!("Bot qq is: {}", bot.qq());

@@ -16,6 +16,7 @@ pub struct Bot {
     api: Api,
 
     event_listeners: Vec<EventListener>,
+    commands: Vec<String>,
 }
 
 impl Bot {
@@ -27,6 +28,7 @@ impl Bot {
             api: Api::new(config.qq, base_url, session),
 
             event_listeners: vec![],
+            commands: vec![],
         }
     }
 
@@ -38,6 +40,7 @@ impl Bot {
             api: self.api.clone(),
 
             event_listeners: vec![],
+            commands: vec![],
         }
     }
 
@@ -142,7 +145,15 @@ impl Bot {
                 !ctx.is_command() && ctx.chatroom_type() == ChatroomType::Group
             }
             EventType::Message => !ctx.is_command(),
-            EventType::Command => ctx.is_command(),
+            EventType::Command => {
+                ctx.is_command()
+                    && ctx.command_name() != ""
+                    // use `bot.on("command", handler)` to handler all command
+                    && ((listener.command_name() == None
+                        && !self.commands.contains(&ctx.command_name().to_string()))
+                        // use `bot.command("command_name", handler)` to handler specific command
+                        || ctx.command_name() == listener.command_name().unwrap_or("".to_string()))
+            }
             _ => false,
         }
     }
@@ -199,6 +210,31 @@ impl Bot {
         }
 
         self.event_listeners
-            .push(EventListener::new(event_type, handler));
+            .push(EventListener::new(event_type, handler, None));
+    }
+
+    pub fn command<F, Fut>(&mut self, command_name: &str, handler: &'static F)
+    where
+        F: Fn(Context) -> Fut,
+        Fut: Future<Output = Result<()>> + 'static,
+    {
+        let command_name = command_name.to_string();
+
+        if command_name == "" {
+            eprintln!("[Error] Adding an empty command.");
+            return;
+        }
+
+        if !self.commands.contains(&command_name) {
+            self.commands.push(command_name.clone())
+        } else {
+            eprintln!("[Error] Adding a duplicate command {}.", command_name);
+            return;
+        }
+
+        let event_type = EventType::from("command");
+
+        self.event_listeners
+            .push(EventListener::new(event_type, handler, Some(command_name)));
     }
 }
