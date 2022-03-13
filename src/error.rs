@@ -8,8 +8,10 @@ pub struct Error {
 }
 
 impl Error {
-    pub fn new(msg: String) -> Self {
-        Error { msg }
+    pub fn new(msg: &str) -> Self {
+        Error {
+            msg: String::from(msg),
+        }
     }
 }
 

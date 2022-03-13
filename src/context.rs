@@ -30,7 +30,7 @@ impl Context {
             SingleMessage::Source { id, time: _ } => id,
             _ => {
                 return Err(Error::new(
-                    "[Error] Receiving error message type when creating context.".to_string(),
+                    "[Error] Receiving error message type when creating context.",
                 ))
             }
         };

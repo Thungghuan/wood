@@ -61,7 +61,7 @@ impl Api {
             println!("Bot successfully linked to qq: {}.", self.qq);
             Ok(())
         } else {
-            Err(Error::new(resp.msg))
+            Err(Error::new(&resp.msg))
         }
     }
 
@@ -92,7 +92,7 @@ impl Api {
         if resp.code == 0 {
             Ok(())
         } else {
-            Err(Error::new(resp.msg))
+            Err(Error::new(&resp.msg))
         }
     }
 
@@ -133,7 +133,7 @@ impl Api {
         if resp.code == 0 {
             Ok(())
         } else {
-            Err(Error::new(resp.msg))
+            Err(Error::new(&resp.msg))
         }
     }
 
@@ -169,7 +169,7 @@ impl Api {
         if resp.code == 0 {
             Ok(resp.data)
         } else {
-            Err(Error::new(resp.msg))
+            Err(Error::new(&resp.msg))
         }
     }
 }
