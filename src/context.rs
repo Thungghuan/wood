@@ -78,6 +78,8 @@ impl Context {
 
         if is_command {
             let command_pattern = Regex::new(r"^\s*/(\S+)").unwrap();
+
+            // the first message of command must be `SingleMessage::Plain`
             if let SingleMessage::Plain { text } = &message_chain[0] {
                 if let Some(caps) = command_pattern.captures(text) {
                     command_name = caps.get(1).map_or("", |m| m.as_str());
@@ -161,16 +163,7 @@ impl Context {
     }
 
     pub fn message_chain(&self) -> MessageChain {
-        let mut message_chain = vec![];
-        for single_message in &self.message_chain {
-            // remove the `At` message from the chain.
-            match single_message {
-                SingleMessage::At { .. } => continue,
-                _ => message_chain.push(single_message.clone()),
-            }
-        }
-
-        message_chain
+        self.message_chain.clone()
     }
 
     pub fn is_at_message(&self) -> bool {
