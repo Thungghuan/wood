@@ -59,7 +59,7 @@ async fn main() {
             text: start_message.to_string(),
         });
 
-        bot.send_message(ChatroomType::Friend, bot.master_qq(), message_chain)
+        bot.send_message(ChatroomType::Friend, bot.master_qq(), message_chain, None)
             .await?;
 
         Ok(())

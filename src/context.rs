@@ -97,7 +97,25 @@ impl Context {
 
     pub async fn reply(&self, message_chain: MessageChain) -> Result<()> {
         self.bot
-            .send_message(self.chatroom_type.clone(), self.chatroom_id, message_chain)
+            .send_message(
+                self.chatroom_type.clone(),
+                self.chatroom_id,
+                message_chain,
+                None,
+            )
+            .await?;
+
+        Ok(())
+    }
+
+    pub async fn quote_reply(&self, message_chain: MessageChain) -> Result<()> {
+        self.bot
+            .send_message(
+                self.chatroom_type.clone(),
+                self.chatroom_id,
+                message_chain,
+                Some(self.message_id),
+            )
             .await?;
 
         Ok(())

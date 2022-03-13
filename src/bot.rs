@@ -172,9 +172,10 @@ impl Bot {
         chatroom_type: ChatroomType,
         target: i64,
         message_chain: MessageChain,
+        quote: Option<i64>
     ) -> Result<()> {
         self.api
-            .send_message(chatroom_type, target, message_chain)
+            .send_message(chatroom_type, target, message_chain, quote)
             .await?;
         Ok(())
     }

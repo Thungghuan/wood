@@ -101,6 +101,7 @@ impl Api {
         chatroom_type: ChatroomType,
         target: i64,
         message_chain: MessageChain,
+        quote: Option<i64>
     ) -> Result<()> {
         #[derive(Serialize)]
         #[serde(rename_all = "camelCase")]
@@ -108,12 +109,14 @@ impl Api {
             session_key: String,
             target: String,
             message_chain: MessageChain,
+            quote: Option<i64>
         }
 
         let params = Params {
             session_key: self.session.clone(),
             target: target.to_string(),
             message_chain,
+            quote
         };
 
         let url = self.url(match chatroom_type {
