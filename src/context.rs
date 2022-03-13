@@ -25,13 +25,11 @@ pub struct Context {
 }
 
 impl Context {
-    pub fn new<S>(bot: Bot, sender: S, message_chain: &MessageChain) -> Result<Self>
+    pub fn new<S>(bot: Bot, sender: S, mut message_chain: MessageChain) -> Result<Self>
     where
         S: Sender,
     {
         let source_message = message_chain[0].clone();
-        let mut content_message_chain = vec![];
-        content_message_chain.extend_from_slice(&message_chain[1..]);
 
         let message_id = match source_message {
             SingleMessage::Source { id, .. } => id,
@@ -42,29 +40,33 @@ impl Context {
             }
         };
 
+        // remove the source message
+        message_chain.remove(0);
+
         let chatroom_type = sender.chatroom_type();
 
         let is_at_me = match chatroom_type {
             ChatroomType::Friend => false,
-            ChatroomType::Group => match content_message_chain[0] {
+            ChatroomType::Group => match message_chain[0] {
                 SingleMessage::At { target, .. } => target == bot.qq(),
                 _ => false,
             },
         };
 
+        // remove the at message
         if is_at_me {
-            content_message_chain.remove(0);
+            message_chain.remove(0);
         }
 
         let is_command = match chatroom_type {
-            ChatroomType::Friend => match &content_message_chain[0] {
+            ChatroomType::Friend => match &message_chain[0] {
                 SingleMessage::Plain { text } => text.as_str().trim().starts_with("/"),
                 _ => false,
             },
             ChatroomType::Group => {
                 is_at_me
                     // the second `SingleMessage` will be the content
-                    && match &content_message_chain[0] {
+                    && match &message_chain[0] {
                         SingleMessage::Plain { text } => text.as_str().trim().starts_with("/"),
                         _ => false,
                     }
@@ -72,15 +74,31 @@ impl Context {
         };
 
         let mut command_name = "";
+        let mut command_attrs = vec![];
 
         if is_command {
-            let command_pattern = Regex::new(r"^\s*/(.+)").unwrap();
-            if let SingleMessage::Plain { text } = &content_message_chain[0] {
+            let command_pattern = Regex::new(r"^\s*/(\S+)").unwrap();
+            if let SingleMessage::Plain { text } = &message_chain[0] {
                 if let Some(caps) = command_pattern.captures(text) {
-                    command_name = caps.get(1).map_or("", |m| m.as_str())
+                    command_name = caps.get(1).map_or("", |m| m.as_str());
+
+                    let mut split = text.split(" ");
+                    split.next();
+                    for attr in split {
+                        command_attrs.push(attr)
+                    }
                 }
             }
         }
+
+
+        let mut content_message_chain = vec![];
+
+        content_message_chain.push(SingleMessage::Plain{
+            text: command_attrs.join(" ")
+        });
+
+        content_message_chain.extend_from_slice(&message_chain[1..]);
 
         Ok(Context {
             bot,

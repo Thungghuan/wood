@@ -165,12 +165,12 @@ impl Bot {
             ReceivedMessage::FriendMessage {
                 sender,
                 message_chain,
-            } => Context::new(self.clone(), sender, &message_chain)?,
+            } => Context::new(self.clone(), sender, message_chain)?,
 
             ReceivedMessage::GroupMessage {
                 sender,
                 message_chain,
-            } => Context::new(self.clone(), sender, &message_chain)?,
+            } => Context::new(self.clone(), sender, message_chain)?,
         };
 
         for listener in &self.event_listeners {
