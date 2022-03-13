@@ -1,8 +1,8 @@
 # QQ number of bot
-qq: '0'
+qq: 0
 
 # QQ number of the master
-masterQQ: '0'
+masterQQ: 0
 
 # Path to the `setting.yml` file for mirai
 settingFile: '../mirai/config/net.mamoe.mirai-api-http/setting.yml'

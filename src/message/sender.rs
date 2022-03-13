@@ -4,10 +4,10 @@ use super::ChatroomType;
 
 pub trait Sender {
     fn chatroom_type(&self) -> ChatroomType;
-    fn chatroom_id(&self) -> i32;
+    fn chatroom_id(&self) -> i64;
     fn chatroom_name(&self) -> String;
 
-    fn sender_id(&self) -> i32;
+    fn sender_id(&self) -> i64;
     fn sender_nickname(&self) -> String;
 }
 
@@ -20,14 +20,14 @@ pub enum Permission {
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct Group {
-    pub id: i32,
+    pub id: i64,
     pub name: String,
     pub permission: Permission,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct FriendSender {
-    pub id: i32,
+    pub id: i64,
     pub nickname: String,
     pub remark: String,
 }
@@ -35,7 +35,7 @@ pub struct FriendSender {
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct GroupSender {
-    pub id: i32,
+    pub id: i64,
     pub member_name: String,
     pub permission: Permission,
     pub group: Group,
@@ -46,7 +46,7 @@ impl Sender for FriendSender {
         ChatroomType::Friend
     }
 
-    fn chatroom_id(&self) -> i32 {
+    fn chatroom_id(&self) -> i64 {
         self.id
     }
 
@@ -55,7 +55,7 @@ impl Sender for FriendSender {
         "".to_string()
     }
 
-    fn sender_id(&self) -> i32 {
+    fn sender_id(&self) -> i64 {
         self.id
     }
 
@@ -69,7 +69,7 @@ impl Sender for GroupSender {
         ChatroomType::Group
     }
 
-    fn chatroom_id(&self) -> i32 {
+    fn chatroom_id(&self) -> i64 {
         self.group.id
     }
 
@@ -77,7 +77,7 @@ impl Sender for GroupSender {
         self.group.name.clone()
     }
 
-    fn sender_id(&self) -> i32 {
+    fn sender_id(&self) -> i64 {
         self.id
     }
 

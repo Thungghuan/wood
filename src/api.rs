@@ -12,19 +12,19 @@ struct BasicResponse {
 
 #[derive(Clone)]
 pub struct Api {
-    qq: String,
+    qq: i64,
     session: String,
     client: reqwest::Client,
     base_url: String,
 }
 
 impl Api {
-    pub fn new(qq: &str, base_url: &str, session: &str) -> Self {
+    pub fn new(qq: i64, base_url: &str, session: &str) -> Self {
         let builder = reqwest::Client::builder();
         let client = builder.no_proxy().build().unwrap();
 
         Api {
-            qq: qq.to_string(),
+            qq,
             session: session.clone().to_string(),
             client,
             base_url: base_url.to_string(),
@@ -40,12 +40,12 @@ impl Api {
         #[serde(rename_all = "camelCase")]
         struct Params {
             session_key: String,
-            qq: String,
+            qq: i64,
         }
 
         let params = Params {
             session_key: self.session.clone(),
-            qq: self.qq.clone(),
+            qq: self.qq,
         };
 
         let resp = self
@@ -70,12 +70,12 @@ impl Api {
         #[serde(rename_all = "camelCase")]
         struct Params {
             session_key: String,
-            qq: String,
+            qq: i64,
         }
 
         let params = Params {
             session_key: self.session.clone(),
-            qq: self.qq.clone(),
+            qq: self.qq,
         };
 
         let resp = self
@@ -99,7 +99,7 @@ impl Api {
     pub async fn send_message(
         &self,
         chatroom_type: ChatroomType,
-        target: &str,
+        target: i64,
         message_chain: MessageChain,
     ) -> Result<()> {
         #[derive(Serialize)]

@@ -10,8 +10,8 @@ use crate::utils::BotConfig;
 use crate::Result;
 
 pub struct Bot {
-    qq: String,
-    master_qq: String,
+    qq: i64,
+    master_qq: i64,
     session: String,
     api: Api,
 
@@ -24,7 +24,7 @@ impl Bot {
             qq: config.qq.clone(),
             master_qq: config.master_qq.clone(),
             session: session.to_string(),
-            api: Api::new(&config.qq, base_url, session),
+            api: Api::new(config.qq, base_url, session),
 
             event_listeners: vec![],
         }
@@ -41,12 +41,12 @@ impl Bot {
         }
     }
 
-    pub fn qq(&self) -> String {
-        self.qq.clone()
+    pub fn qq(&self) -> i64 {
+        self.qq
     }
 
-    pub fn master_qq(&self) -> String {
-        self.master_qq.clone()
+    pub fn master_qq(&self) -> i64 {
+        self.master_qq
     }
 
     pub fn session(&self) -> String {
@@ -170,11 +170,11 @@ impl Bot {
     pub async fn send_message(
         &self,
         chatroom_type: ChatroomType,
-        target: &str,
+        target: i64,
         message_chain: MessageChain,
     ) -> Result<()> {
         self.api
-            .send_message(chatroom_type, &target, message_chain)
+            .send_message(chatroom_type, target, message_chain)
             .await?;
         Ok(())
     }

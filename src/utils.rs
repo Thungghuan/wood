@@ -4,8 +4,8 @@ use yaml_rust::{Yaml, YamlLoader};
 
 #[derive(Debug, PartialEq)]
 pub struct BotConfig {
-    pub qq: String,
-    pub master_qq: String,
+    pub qq: i64,
+    pub master_qq: i64,
     pub setting_file: String,
 }
 
@@ -33,8 +33,8 @@ fn load_yaml_file(path: &str) -> Yaml {
 }
 
 fn load_bot_config(config: Yaml) -> BotConfig {
-    let qq = String::from(config["qq"].as_str().unwrap());
-    let master_qq = String::from(config["masterQQ"].as_str().unwrap());
+    let qq = config["qq"].as_i64().unwrap();
+    let master_qq = config["masterQQ"].as_i64().unwrap();
     let setting_file = String::from(config["settingFile"].as_str().unwrap());
 
     BotConfig {
@@ -111,17 +111,17 @@ mod test_utils {
     fn check_load_bot_config() {
         let config_file_string = r#"
 # QQ number of bot
-qq: '10000000'
+qq: 10000000
 # QQ number of the master
-masterQQ: '10000000'
+masterQQ: 10000000
 # Path to the `settings.yml` file for mirai
 settingFile: 'config/settings.yml'
         "#;
         let config = YamlLoader::load_from_str(&config_file_string).unwrap()[0].clone();
 
         let bot_config = BotConfig {
-            qq: "10000000".to_string(),
-            master_qq: "10000000".to_string(),
+            qq: 10000000,
+            master_qq: 10000000,
             setting_file: "config/settings.yml".to_string(),
         };
 

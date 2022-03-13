@@ -4,8 +4,8 @@ use serde::{Deserialize, Serialize};
 #[serde(tag = "type")]
 pub enum SingleMessage {
     Source {
-        id: i32,
-        time: i32,
+        id: i64,
+        time: i64,
     },
 
     At {
@@ -19,7 +19,7 @@ pub enum SingleMessage {
 
     #[serde(rename_all = "camelCase")]
     Face {
-        face_id: i32,
+        face_id: i64,
         name: String,
     },
 

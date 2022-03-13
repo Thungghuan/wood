@@ -7,13 +7,13 @@ pub struct Context {
     bot: Bot,
 
     chatroom_type: ChatroomType,
-    chatroom_id: i32,
+    chatroom_id: i64,
     chatroom_name: String,
 
-    sender_id: i32,
+    sender_id: i64,
     sender_nickname: String,
 
-    message_id: i32,
+    message_id: i64,
     message_chain: MessageChain,
 }
 
@@ -70,7 +70,7 @@ impl Context {
         self.chatroom_type.clone()
     }
 
-    pub fn chatroom_id(&self) -> i32 {
+    pub fn chatroom_id(&self) -> i64 {
         self.chatroom_id
     }
 
@@ -78,7 +78,7 @@ impl Context {
         self.chatroom_name.clone()
     }
 
-    pub fn sender_id(&self) -> i32 {
+    pub fn sender_id(&self) -> i64 {
         self.sender_id
     }
 
@@ -97,11 +97,7 @@ impl Context {
 
     pub async fn reply(&self, message_chain: MessageChain) -> Result<()> {
         self.bot
-            .send_message(
-                self.chatroom_type.clone(),
-                &self.chatroom_id.to_string(),
-                message_chain,
-            )
+            .send_message(self.chatroom_type.clone(), self.chatroom_id, message_chain)
             .await?;
 
         Ok(())
