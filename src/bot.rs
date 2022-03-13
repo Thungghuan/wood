@@ -137,6 +137,7 @@ impl Bot {
             EventType::FriendMessage => ctx.chatroom_type() == ChatroomType::Friend,
             EventType::GroupMessage => ctx.chatroom_type() == ChatroomType::Group,
             EventType::Message => true,
+            EventType::Command => ctx.is_command(),
             _ => false,
         }
     }
@@ -172,7 +173,7 @@ impl Bot {
         chatroom_type: ChatroomType,
         target: i64,
         message_chain: MessageChain,
-        quote: Option<i64>
+        quote: Option<i64>,
     ) -> Result<()> {
         self.api
             .send_message(chatroom_type, target, message_chain, quote)

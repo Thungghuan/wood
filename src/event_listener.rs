@@ -9,6 +9,8 @@ pub enum EventType {
     FriendMessage,
     GroupMessage,
 
+    Command,
+
     Invalid(Error),
 }
 
@@ -25,6 +27,7 @@ impl Display for EventType {
             EventType::Message => "message",
             EventType::FriendMessage => "friendMessage",
             EventType::GroupMessage => "groupMessage",
+            EventType::Command => "command",
             EventType::Invalid(_) => "invalidEvent",
         };
 
@@ -39,6 +42,7 @@ impl From<&str> for EventType {
             "message" => EventType::Message,
             "friendMessage" => EventType::FriendMessage,
             "groupMessage" => EventType::GroupMessage,
+            "command" => EventType::Command,
             _ => {
                 let msg = format!("Invalid message type: received `{}`, expected `message`, `friendMessage` or `groupMessage`.", event_type);
                 EventType::Invalid(Error::new(&msg))

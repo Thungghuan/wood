@@ -120,7 +120,6 @@ impl Context {
     }
 
     pub fn is_command(&self) -> bool {
-        println!("{:#?}", self.message_chain);
         match self.chatroom_type {
             ChatroomType::Friend => match &self.message_chain[0] {
                 SingleMessage::Plain { text } => text.as_str().trim().starts_with("/"),
