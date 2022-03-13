@@ -10,6 +10,9 @@ pub struct Context {
 
     is_at_me: bool,
 
+    is_command: bool,
+    command_name: String,
+
     chatroom_type: ChatroomType,
     chatroom_id: i64,
     chatroom_name: String,
@@ -53,10 +56,39 @@ impl Context {
             content_message_chain.remove(0);
         }
 
+        let is_command = match chatroom_type {
+            ChatroomType::Friend => match &content_message_chain[0] {
+                SingleMessage::Plain { text } => text.as_str().trim().starts_with("/"),
+                _ => false,
+            },
+            ChatroomType::Group => {
+                is_at_me
+                    // the second `SingleMessage` will be the content
+                    && match &content_message_chain[0] {
+                        SingleMessage::Plain { text } => text.as_str().trim().starts_with("/"),
+                        _ => false,
+                    }
+            }
+        };
+
+        let mut command_name = "";
+
+        if is_command {
+            let command_pattern = Regex::new(r"^\s*/(.+)").unwrap();
+            if let SingleMessage::Plain { text } = &content_message_chain[0] {
+                if let Some(caps) = command_pattern.captures(text) {
+                    command_name = caps.get(1).map_or("", |m| m.as_str())
+                }
+            }
+        }
+
         Ok(Context {
             bot,
 
             is_at_me,
+
+            is_command,
+            command_name: command_name.to_string(),
 
             chatroom_type,
             chatroom_id: sender.chatroom_id(),
@@ -75,6 +107,9 @@ impl Context {
             bot: self.bot.clone(),
 
             is_at_me: self.is_at_me,
+
+            is_command: self.is_command,
+            command_name: self.command_name.clone(),
 
             chatroom_type: self.chatroom_type.clone(),
             chatroom_id: self.chatroom_id,
@@ -136,37 +171,20 @@ impl Context {
     }
 
     pub fn is_command(&self) -> bool {
-        match self.chatroom_type {
-            ChatroomType::Friend => match &self.message_chain[0] {
-                SingleMessage::Plain { text } => text.as_str().trim().starts_with("/"),
-                _ => false,
-            },
-            ChatroomType::Group => {
-                self.is_at_me()
-                    // the second `SingleMessage` will be the content
-                    && match &self.message_chain[0] {
-                        SingleMessage::Plain { text } => text.as_str().trim().starts_with("/"),
-                        _ => false,
-                    }
-            }
-        }
+        self.is_command
     }
 
     pub fn command_name(&self) -> &str {
-        let mut name = "";
-
-        if self.is_command() {
-            let command_pattern = Regex::new(r"^\s*/(.+)").unwrap();
-            if let SingleMessage::Plain { text } = &self.message_chain[0] {
-                if let Some(caps) = command_pattern.captures(text) {
-                    name = caps.get(1).map_or("", |m| m.as_str())
-                }
-            }
-        } else {
-            println!("{}", Error::new("[Warning] Call the `command_name` method only when the `is_command` return true."))
+        if !self.is_command {
+            println!(
+                "{}",
+                Error::new(
+                    "[Warning] Call `command_name` only when the `is_command()` return true."
+                )
+            )
         }
 
-        name
+        &self.command_name
     }
 
     pub async fn reply(&self, message_chain: MessageChain) -> Result<()> {
