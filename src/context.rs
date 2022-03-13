@@ -89,7 +89,6 @@ impl Context {
     pub fn message_chain(&self) -> MessageChain {
         let mut message_chain = vec![];
         for single_message in &self.message_chain {
-            
             // remove the `At` message from the chain.
             match single_message {
                 SingleMessage::At { .. } => continue,
@@ -101,16 +100,40 @@ impl Context {
     }
 
     pub fn is_at_message(&self) -> bool {
-        match self.message_chain[0] {
-            SingleMessage::At { .. } => true,
-            _ => false,
+        match self.chatroom_type {
+            ChatroomType::Friend => false,
+            ChatroomType::Group => match self.message_chain[0] {
+                SingleMessage::At { .. } => true,
+                _ => false,
+            },
         }
     }
 
     pub fn is_at_me(&self) -> bool {
-        match self.message_chain[0] {
-            SingleMessage::At { target, .. } => target == self.bot.qq(),
-            _ => false,
+        match self.chatroom_type {
+            ChatroomType::Friend => false,
+            ChatroomType::Group => match self.message_chain[0] {
+                SingleMessage::At { target, .. } => target == self.bot.qq(),
+                _ => false,
+            },
+        }
+    }
+
+    pub fn is_command(&self) -> bool {
+        println!("{:#?}", self.message_chain);
+        match self.chatroom_type {
+            ChatroomType::Friend => match &self.message_chain[0] {
+                SingleMessage::Plain { text } => text.as_str().trim().starts_with("/"),
+                _ => false,
+            },
+            ChatroomType::Group => {
+                self.is_at_me()
+                    // the second `SingleMessage` will be the content
+                    && match &self.message_chain[1] {
+                        SingleMessage::Plain { text } => text.as_str().trim().starts_with("/"),
+                        _ => false,
+                    }
+            }
         }
     }
 

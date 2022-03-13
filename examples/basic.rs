@@ -46,6 +46,23 @@ async fn main() {
     // you are listening a `InvalidEvent`.
     bot.on("msg", &|_| async { Ok(()) });
 
+    bot.on("message", &|ctx| async move {
+        let mut message_chain: MessageChain = vec![];
+        if ctx.is_command() {
+            message_chain.push(SingleMessage::Plain {
+                text: "This is a command".to_string(),
+            });
+            ctx.quote_reply(message_chain).await?
+        } else {
+            message_chain.push(SingleMessage::Plain {
+                text: "This is not a command".to_string(),
+            });
+            ctx.quote_reply(message_chain).await?
+        }
+
+        Ok(())
+    });
+
     // Start your bot with a callback.
     bot.start_with_callback(|bot| async {
         println!("Bot qq is: {}", bot.qq());
