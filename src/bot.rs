@@ -133,10 +133,15 @@ impl Bot {
     }
 
     fn will_handle(&self, ctx: &Context, listener: &EventListener) -> bool {
+        // Distinguish between common message and command
         match listener.event_type() {
-            EventType::FriendMessage => ctx.chatroom_type() == ChatroomType::Friend,
-            EventType::GroupMessage => ctx.chatroom_type() == ChatroomType::Group,
-            EventType::Message => true,
+            EventType::FriendMessage => {
+                !ctx.is_command() && ctx.chatroom_type() == ChatroomType::Friend
+            }
+            EventType::GroupMessage => {
+                !ctx.is_command() && ctx.chatroom_type() == ChatroomType::Group
+            }
+            EventType::Message => !ctx.is_command(),
             EventType::Command => ctx.is_command(),
             _ => false,
         }
