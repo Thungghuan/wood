@@ -27,7 +27,7 @@ impl Context {
         content_message_chain.extend_from_slice(&message_chain[1..]);
 
         let message_id = match source_message {
-            SingleMessage::Source { id, time: _ } => id,
+            SingleMessage::Source { id, .. } => id,
             _ => {
                 return Err(Error::new(
                     "[Error] Receiving error message type when creating context.",
@@ -89,10 +89,29 @@ impl Context {
     pub fn message_chain(&self) -> MessageChain {
         let mut message_chain = vec![];
         for single_message in &self.message_chain {
-            message_chain.push(single_message.clone())
+            
+            // remove the `At` message from the chain.
+            match single_message {
+                SingleMessage::At { .. } => continue,
+                _ => message_chain.push(single_message.clone()),
+            }
         }
 
         message_chain
+    }
+
+    pub fn is_at_message(&self) -> bool {
+        match self.message_chain[0] {
+            SingleMessage::At { .. } => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_at_me(&self) -> bool {
+        match self.message_chain[0] {
+            SingleMessage::At { target, .. } => target == self.bot.qq(),
+            _ => false,
+        }
     }
 
     pub async fn reply(&self, message_chain: MessageChain) -> Result<()> {

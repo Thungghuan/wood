@@ -9,7 +9,7 @@ pub enum SingleMessage {
     },
 
     At {
-        target: String,
+        target: i64,
         display: String,
     },
 
@@ -47,7 +47,7 @@ fn check_message_chain_serialize_result() {
     );
 
     let at_message = SingleMessage::At {
-        target: "20211113".to_string(),
+        target: 20211113,
         display: "土土木木".to_string(),
     };
 
