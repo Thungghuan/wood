@@ -148,10 +148,10 @@ impl Bot {
             EventType::Command => {
                 ctx.is_command()
                     && ctx.command_name() != ""
-                    // use `bot.on("command", handler)` to handler all command
+                    // use `bot.on("command", handler)` to handle all command
                     && ((listener.command_name() == None
                         && !self.commands.contains(&ctx.command_name().to_string()))
-                        // use `bot.command("command_name", handler)` to handler specific command
+                        // use `bot.command("command_name", handler)` to handle specific command
                         || ctx.command_name() == listener.command_name().unwrap_or("".to_string()))
             }
             _ => false,
