@@ -16,20 +16,43 @@ struct BotSettings {
     port: String,
 }
 
-fn load_yaml_file(path: &str) -> Yaml {
+struct ConfigFile {
+    file_name: String,
+    content: String,
+}
+
+impl ConfigFile {
+    // Panic if error occurs when scanning yaml file.
+    fn load_yaml(&self) -> Yaml {
+        let error_msg = format!(
+            "Error occurs when scanning the yaml file `{}`\nCheck the file first.",
+            self.file_name
+        );
+
+        parse_yaml(&self.content, &error_msg)
+    }
+}
+
+fn read_yaml_file(path: &str) -> ConfigFile {
     let mut file;
     match File::open(path) {
         Ok(f) => file = f,
         Err(e) => panic!("{}", e),
     }
 
-    let mut contents = String::new();
-    if let Err(e) = file.read_to_string(&mut contents) {
+    let mut content = String::new();
+    if let Err(e) = file.read_to_string(&mut content) {
         panic!("{}", e)
     }
 
-    // When error occurred executing `unwrap()`, it will panic.
-    YamlLoader::load_from_str(&contents).unwrap()[0].clone()
+    ConfigFile {
+        file_name: path.to_string(),
+        content,
+    }
+}
+
+fn parse_yaml(content: &str, error_msg: &str) -> Yaml {
+    YamlLoader::load_from_str(content).expect(error_msg)[0].clone()
 }
 
 fn load_bot_config(config: Yaml) -> BotConfig {
@@ -94,8 +117,8 @@ async fn get_session(base_url: &str, verify_key: &str) -> String {
 }
 
 pub async fn init(path: &str) -> (BotConfig, String, String) {
-    let config = load_bot_config(load_yaml_file(path));
-    let settings = load_bot_settings(load_yaml_file(&config.setting_file));
+    let config = load_bot_config(read_yaml_file(path).load_yaml());
+    let settings = load_bot_settings(read_yaml_file(&config.setting_file).load_yaml());
     let base_url = String::from("http://") + &settings.host + ":" + &settings.port;
     let session = get_session(&base_url, &settings.verify_key).await;
 
@@ -104,8 +127,7 @@ pub async fn init(path: &str) -> (BotConfig, String, String) {
 
 #[cfg(test)]
 mod test_utils {
-    use super::{load_bot_config, load_bot_settings, BotConfig, BotSettings};
-    use yaml_rust::YamlLoader;
+    use super::{load_bot_config, load_bot_settings, parse_yaml, BotConfig, BotSettings};
 
     #[test]
     fn check_load_bot_config() {
@@ -117,7 +139,7 @@ masterQQ: 10000000
 # Path to the `settings.yml` file for mirai
 settingFile: 'config/settings.yml'
         "#;
-        let config = YamlLoader::load_from_str(&config_file_string).unwrap()[0].clone();
+        let config = parse_yaml(&config_file_string, "test error");
 
         let bot_config = BotConfig {
             qq: 10000000,
@@ -131,29 +153,29 @@ settingFile: 'config/settings.yml'
     #[test]
     fn check_load_bot_settings() {
         let settings_file_string = r#"
-## comments
-
-## [Ignore]
 adapters:
-  - http
-  - ws
+    - http
+    - ws
 
-## get VERIFY-KEY
+debug: false
+
 enableVerify: true
 verifyKey: verify-key
-
-## get http.host and http.port only
+singleMode: false
+cacheSize: 4096
 adapterSettings:
-  http:
-    host: mirai.host
-    port: 80
-    # cors: [*]
-  ws:
-    host: mirai.host
-    port: 80
-    reservedSyncId: -1
+    http:
+        host: mirai.host
+        port: 80
+        cors: ["*"]
+
+    ws:
+        host: mirai.host
+        port: 80
+        reservedSyncId: -1
         "#;
-        let config = YamlLoader::load_from_str(&settings_file_string).unwrap()[0].clone();
+
+        let config = parse_yaml(&settings_file_string, "test error");
 
         let bot_settings = BotSettings {
             verify_key: "verify-key".to_string(),

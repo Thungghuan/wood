@@ -5,4 +5,4 @@ qq: 0
 masterQQ: 0
 
 # Path to the `setting.yml` file for mirai
-settingFile: '../mirai/config/net.mamoe.mirai-api-http/setting.yml'
+settingFile: ../mirai/config/net.mamoe.mirai-api-http/setting.yml
